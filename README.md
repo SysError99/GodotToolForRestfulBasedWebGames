@@ -153,6 +153,9 @@ Convert URL into `user://` PCK path.
 #### `Api.create_http(): HTTPObject`
 Manually create an `HTTPObject` that is used internally by many of functions in the script.
 
+#### `Api.get_access_token(): String`
+Read access token savend in the device, returns an empty string if not found.
+
 #### `Api.get_auth_headers(): PoolStringArray`
 Create an HTTP headers that contain `access-token` from saved token.
 
@@ -174,3 +177,6 @@ Load access token from storage and store it in this function. Can be accessed wi
 	while !Api.access_token_loaded:
 		yield(get_tree(), "idle_frame")
 ```
+
+#### `Api.set_access_token(value: String): void`
+Set access token, and save it automatically.
