@@ -54,6 +54,7 @@ func convert_to_pck_path(string: String) -> String:
 
 func create_http() -> HTTPObject:
 	var http := http_tscn.instance() as HTTPObject
+	http.api = self
 	add_child(http)
 	return http
 

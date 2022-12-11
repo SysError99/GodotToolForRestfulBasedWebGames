@@ -7,6 +7,9 @@ signal completed_content_type(type)
 signal completed_status_code(status_code)
 
 
+var api: ApiNode
+
+
 func emit_signal_http_request_completed(status_code = 200, headers = PoolStringArray(), body = PoolByteArray()) -> void:
 	for n in 2:
 		yield(get_tree(), "idle_frame")
@@ -34,11 +37,11 @@ func _request_completed(result: int, status_code: int, headers: PoolStringArray,
 		emit_signal("completed_status_code", status_code)
 	for label in headers:
 		if "access-token: " in label:
-			Api.access_token = label.replace('access-token: ',"")
-			Api.save_access_token()
+			api.access_token = label.replace('access-token: ',"")
+			api.save_access_token()
 		if "access-token:" in label:
-			Api.access_token = label.replace('access-token:',"")
-			Api.save_access_token()
+			api.access_token = label.replace('access-token:',"")
+			api.save_access_token()
 		if "application/json" in label:
 			emit_signal("completed_content_type", "json")
 			emit_signal("completed", JSON.parse(body.get_string_from_utf8()).result)
