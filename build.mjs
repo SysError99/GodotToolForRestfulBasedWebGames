@@ -40,15 +40,19 @@ const log = (msg) => {
     if (!existsSync(configPath)) {
         writeFileSync(
             configPath,
-            JSON.stringify({
-                "bin": "/path/to/godot/headless/bin",
-                "buildNumberPath": "./build.number.txt",
-                "mainPreset": "Production",
-                "mainPresetPath": "./build/index.html",
-                "pckPresets": {
-                    "NameOfPck": "./build/pck/name_of.pck",
+            JSON.stringify(
+                {
+                    "bin": "/path/to/godot/headless/bin",
+                    "buildNumberPath": "./build.number.txt",
+                    "mainPreset": "Production",
+                    "mainPresetPath": "./build/index.html",
+                    "pckPresets": {
+                        "NameOfPck": "./build/pck/name_of.pck",
+                    },
                 },
-            })
+                null,
+                "\t"
+            )
         );
         return;
     }
