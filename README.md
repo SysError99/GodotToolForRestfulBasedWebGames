@@ -23,11 +23,25 @@ There are several ways to mitigate it, one of them is to separate PCK into piece
 ## Quickstart
 
 ### Building Games
-1. Simply copy all files from this repository (excluding Git-related stuffs) to your Godot project folder. Then, in command line shell of project directory, run:
+1. Simply copy all files from this repository (excluding Git-related stuffs, and `README.md`) to your Godot project folder. Then, in command line shell of project directory, run:
 ```
 node build.mjs
 ```
 on your project directory to initialise `build.config.json` file.
+
+Its structure will look something like this:
+```json
+{
+	"bin": "/path/to/godot/headless/bin",
+	"buildNumberPath": "./build.number.txt",
+	"mainPreset": "Production",
+	"mainPresetPath": "./build/index.html",
+	"pckPresets": {
+		"NameOfPck": "./build/pck/name_of.pck",
+	},
+}
+```
+*You can remove `NameOfPck` part as we will create proper ones later.*
 
 2. In the generated `build.config.json` file, make change of `bin` path with path of your Godot Editor (or headless) executable.
 
@@ -104,7 +118,7 @@ Specify an array of URL list of PCKs to be removed from the device.
 
 
 #### `Api.host(url: String): Api`
-Specify host URL instead of using default one from current URL
+Specify host URL instead of using default one from current URL.
 
 #### `Api.http_auth_get(url: String, download_file: String): HTTPObject`
 Make an HTTP GET request with `access-token` attached. If you specify `download_file` with non-empty parameter, it will also download any of results into path specified with it. You can `yield()` each parameters in this format (cannot change order):
@@ -143,7 +157,7 @@ Manually create an `HTTPObject` that is used internally by many of functions in 
 Create an HTTP headers that contain `access-token` from saved token.
 
 #### `Api.get_auth_json_headers(): PoolStringArray`
-Create an HTTP headers that contain both `access-token` and `content-type: application/json`,
+Create an HTTP headers that contain both `access-token` and `content-type: application/json`.
 
 #### `Api.get_headers(): PoolStringArray`
 Create an empty HTTP headers.
@@ -152,10 +166,10 @@ Create an empty HTTP headers.
 Create an HTTP header that has `content-type: json`.
 
 #### `Api.get_url(): String`
-Get hostname URL from browser. If it's not running on HTML5 platform, it will fallback to `http://localhost:8788.
+Get hostname URL from browser. If it's not running on HTML5 platform, it will fallback to `http://localhost:8788`.
 
 #### `Api.load_access_token()`
-Loads access token from storage and store it in this function. Can be accessed with `Api.access_token`. If you want to know if the function loads the access token but also wanted to know if it actually exists or not, you can check with `Api.access_token_loaded` in loop:
+Load access token from storage and store it in this function. Can be accessed with `Api.access_token`. If you want to know if the function loads the access token but also wanted to know if it actually exists or not, you can check with `Api.access_token_loaded` in loop:
 ```gdscript
 	while !Api.access_token_loaded:
 		yield(get_tree(), "idle_frame")
