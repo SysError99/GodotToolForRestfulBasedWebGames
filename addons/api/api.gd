@@ -12,7 +12,7 @@ var build_number_search_params := ""
 var custom_host_url := ""
 
 
-var http_tscn := preload("res://obj/auto_load/api.res/http.tscn")
+var http_tscn := preload("res://addons/api/http.tscn")
 var window := JavaScript.get_interface("window")
 
 
