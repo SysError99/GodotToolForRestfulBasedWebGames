@@ -16,7 +16,6 @@ var http_tscn := preload("res://addons/api/http.tscn")
 var window := JavaScript.get_interface("window")
 
 
-var access_token := ""
 var access_token_loaded := false
 
 
@@ -59,15 +58,19 @@ func create_http() -> HTTPObject:
 	return http
 
 
+func get_access_token() -> String:
+	return get_meta("access-token", "")
+
+
 func get_auth_headers() -> PoolStringArray:
 	return PoolStringArray([
-		"access-token: " + access_token,
+		"access-token: " + get_access_token(),
 	])
 
 
 func get_auth_json_headers() -> PoolStringArray:
 	return PoolStringArray([
-		"access-token: " + access_token,
+		"access-token: " + get_access_token(),
 		"Content-Type: applicaiton/json",
 	])
 
@@ -195,7 +198,7 @@ func load_access_token() -> void:
 		if file.open(ACCESS_TOKEN_PATH, File.READ) != OK:
 			printerr("Cannot open access token!")
 			return
-		access_token = file.get_as_text()
+		set_access_token(file.get_as_text())
 		file.close()
 		print("Access token loaded.")
 	access_token_loaded = true
@@ -206,9 +209,14 @@ func save_access_token() -> void:
 	if file.open(ACCESS_TOKEN_PATH, File.WRITE) != OK:
 		printerr("Canot open access token file to write!")
 		return
-	file.store_string(access_token)
+	file.store_string(get_access_token())
 	file.close()
 	print("Access token saved.")
+
+
+func set_access_token(value: String) -> void:
+	set_meta("access-token", value)
+	save_access_token()
 
 
 func _ready() -> void:
