@@ -13,7 +13,7 @@ There are several ways to mitigate it, one of them is to separate PCK into piece
 2. GDScript file that contains API calling functions, PCK download/update functions, and automatic access token saver.
 
 ---
-# Limitations
+## Limitations
 1. Only tested on Linux.
 2. Dosen't have advanced build number specifier.
 3. Node.JS 16 minimum is required to run this tool.
