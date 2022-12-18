@@ -34,6 +34,7 @@ Its structure will look something like this:
 {
 	"bin": "/path/to/godot/headless/bin",
 	"buildNumberPath": "./build.number.txt",
+	"outBuildNumberPath": "./build/build.number.txt",
 	"mainPreset": "Production",
 	"mainPresetPath": "./build/index.html",
 	"pckPresets": {
