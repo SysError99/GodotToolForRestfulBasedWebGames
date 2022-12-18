@@ -74,7 +74,7 @@ const log = (msg) => {
             buildNumberPath,
             JSON.stringify(JSON.parse(readFileSync(buildNumberPath, { encoding: 'utf8' })) + 1)
         );
-        log(`Updated build number indicator.`)
+        log(`Updated build number indicator.`);
     }
 
 
