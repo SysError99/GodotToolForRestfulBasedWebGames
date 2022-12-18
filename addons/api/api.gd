@@ -250,9 +250,9 @@ func _ready() -> void:
 		if !OS.get_name() == "HTML5":
 			return
 		var http := http_get(BUILD_NUMBER_FILENAME)
-		var status := yield(http, "completed_status_code")
-		var content_type := yield(http, "completed_content_type")
-		var body := yield(http, "completed")
+		var status := yield(http, "completed_status_code") as int
+		var content_type := yield(http, "completed_content_type") as String
+		var body = yield(http, "completed")
 		if status < 200 || status > 299 || content_type != "text":
 			printerr('%s returns %d (%s)' % [BUILD_NUMBER_FILENAME, status, content_type])
 			return
