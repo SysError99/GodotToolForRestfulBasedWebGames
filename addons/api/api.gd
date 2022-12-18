@@ -249,7 +249,7 @@ func _ready() -> void:
 			# End Version control behaviour
 		if !OS.get_name() == "HTML5":
 			return
-		var http := http_get(BUILD_NUMBER_FILENAME)
+		var http := http_get(BUILD_NUMBER_FILENAME + "?%d" % randi())
 		var status := yield(http, "completed_status_code") as int
 		var content_type := yield(http, "completed_content_type") as String
 		var body = yield(http, "completed")
