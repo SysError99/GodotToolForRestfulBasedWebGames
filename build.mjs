@@ -2,6 +2,7 @@ import { dirname } from 'path';
 import { exec } from 'child_process';
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { fileURLToPath } from 'url';
+import { copyFile } from 'fs/promises';
 
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -44,6 +45,7 @@ const log = (msg) => {
                 {
                     "bin": "/path/to/godot/headless/bin",
                     "buildNumberPath": "./build.number.txt",
+                    "outBuildNumberPath": "./build/build.number.txt", // Unnecessary
                     "mainPreset": "Production",
                     "mainPresetPath": "./build/index.html",
                     "pckPresets": {
@@ -57,12 +59,14 @@ const log = (msg) => {
         return;
     }
 
+
     const config = JSON.parse(
         readFileSync(configPath, { encoding: 'utf-8', flag: 'r' })
     );
     const binPath = config['bin'];
     const pckPresets = config['pckPresets'];
     const buildNumberPath = config['buildNumberPath'];
+    const outBuildNumberPath = config["outBuildNumberPath"];
 
 
     if (!existsSync(buildNumberPath)) {
@@ -75,6 +79,12 @@ const log = (msg) => {
             JSON.stringify(JSON.parse(readFileSync(buildNumberPath, { encoding: 'utf8' })) + 1)
         );
         log(`Updated build number indicator.`);
+    }
+
+
+    if (outBuildNumberPath) {
+        log(`Exporting build number to build directory...`);
+        await copyFile(buildNumberPath, outBuildNumberPath);
     }
 
 

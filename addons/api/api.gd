@@ -3,6 +3,7 @@ class_name ApiNode
 
 
 const ACCESS_TOKEN_PATH = "user://access_token"
+const BUILD_NUMBER_FILENAME = "build.number.txt"
 const BUILD_NUMBER_PATH = "res://build.number.txt"
 const CURRENT_BUILD_NUMBER_PATH = 'user://current_build'
 const USE_VERSION_CONTROL = true
@@ -229,19 +230,40 @@ func _ready() -> void:
 			printerr("Cannot find build number file, cannot automate version control.")
 			return
 		file.open(BUILD_NUMBER_PATH, File.READ)
-		build_number_search_params = "?v=" + file.get_as_text()
-		print("Current build number template is " + build_number_search_params)
+		var build_number := file.get_as_text()
+		build_number_search_params = "?v=" + build_number
+		print("Current build number is " + build_number)
 		file.close()
 		if !dir.file_exists(CURRENT_BUILD_NUMBER_PATH):
 			file.open(CURRENT_BUILD_NUMBER_PATH, File.WRITE)
-			file.store_string(build_number_search_params)
+			file.store_string(build_number)
 			file.close()
 			return
 		file.open(CURRENT_BUILD_NUMBER_PATH, File.READ_WRITE)
 		var current_build := file.get_as_text()
-		if current_build != build_number_search_params:
-			file.store_string(build_number_search_params)
+		file.close()
+		if current_build != build_number:
+			file.store_string(build_number)
 			# Version control behaviour
 			Api.clear_all_pck()
 			# End Version control behaviour
-		file.close()
+		if !OS.get_name() == "HTML5":
+			return
+		var http := http_get(BUILD_NUMBER_FILENAME)
+		var status := yield(http, "completed_status_code")
+		var content_type := yield(http, "completed_content_type")
+		var body := yield(http, "completed")
+		if status < 200 || status > 299 || content_type != "text":
+			printerr('%s returns %d (%s)' % [BUILD_NUMBER_FILENAME, status, content_type])
+			return
+		var version := body as String
+		if version == build_number:
+			print("Version is up to date!")
+			return
+		print("Version isn't up to date, trying to refresh.")
+		if !OS.has_feature('JavaScript'):
+			return
+		var window := JavaScript.get_interface("window")
+		if !is_instance_valid(window):
+			return
+		window.reload()
