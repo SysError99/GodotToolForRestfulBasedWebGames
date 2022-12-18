@@ -241,12 +241,12 @@ func _ready() -> void:
 			return
 		file.open(CURRENT_BUILD_NUMBER_PATH, File.READ_WRITE)
 		var current_build := file.get_as_text()
-		file.close()
 		if current_build != build_number:
 			file.store_string(build_number)
 			# Version control behaviour
 			Api.clear_all_pck()
 			# End Version control behaviour
+		file.close()
 		if !OS.get_name() == "HTML5":
 			return
 		var http := http_get(BUILD_NUMBER_FILENAME + "?%d" % randi())
