@@ -66,20 +66,28 @@ const log = (msg) => {
     const binPath = config['bin'];
     const pckPresets = config['pckPresets'];
     const buildNumberPath = config['buildNumberPath'];
+    /**@type {string} */
+    const mainPresetPath = config['mainPresetPath'];
     const outBuildNumberPath = config["outBuildNumberPath"];
+    let currentBuildNumber = 0;
 
 
     if (!existsSync(buildNumberPath)) {
         writeFileSync(buildNumberPath, "0\n");
         log(`Generated new build number indicator file at '${buildNumberPath}'.`);
     } else {
-        /** @type {number} */
+        currentBuildNumber = JSON.parse(readFileSync(buildNumberPath, { encoding: 'utf8' })) + 1;
         writeFileSync(
             buildNumberPath,
-            JSON.stringify(JSON.parse(readFileSync(buildNumberPath, { encoding: 'utf8' })) + 1)
+            JSON.stringify(currentBuildNumber)
         );
         log(`Updated build number indicator.`);
     }
+
+
+    const mainPresetUpdatedPath = mainPresetPath.split('.html').join(`${currentBuildNumber}.html`);
+    const mainPresetUpdatedPathSplitted = mainPresetUpdatedPath.split('/');
+    const mainPresetUpdatedPathFilename = mainPresetUpdatedPathSplitted[mainPresetUpdatedPathSplitted.length - 1];
 
 
     if (outBuildNumberPath) {
@@ -89,7 +97,29 @@ const log = (msg) => {
 
 
     log("Exporting main preset...");
-    await execute(`${binPath} --export ${config['mainPreset']} ${config['mainPresetPath']}`, { cwd: __dirname });
+    writeFileSync(
+        mainPresetPath,
+/*html*/`
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Redirecting...</title>
+        <meta charset="UTF-8" />
+        <script>
+            let url = window.location.href.split('/');
+            url[url.length - 1] = '${mainPresetUpdatedPathFilename}';
+            window.location.href = url.join('/');
+        </script>
+    </head>
+    <body>
+        Please enable JavaScript to continue.<br>
+        <br>
+        Redirecting...
+    </body>
+</html>
+`
+    );
+    await execute(`${binPath} --export ${config['mainPreset']} ${mainPresetUpdatedPath}`, { cwd: __dirname });
     log("Exporting main preset done.");
 
 
