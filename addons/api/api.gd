@@ -8,6 +8,7 @@ const CURRENT_VERSION_PATH = "user://current_version"
 
 var custom_host_url := ""
 var http_tscn := preload("res://addons/api/http.tscn")
+var imported_pcks := []
 var window := JavaScript.get_interface("window")
 
 
@@ -151,6 +152,10 @@ func http_get_pck(path: String, replace = false) -> HTTPObject:
 	http.download_file = convert_to_pck_path(path)
 	http.set_meta("import_pck_path", path)
 	http.set_meta("import_pck", true)
+	if http.download_file in imported_pcks:
+		printerr("PCK already gets imported, if PCK replace is intended, the game should restart.")
+		http.emit_signal_http_request_completed()
+		return http
 	if !replace:
 		var dir := Directory.new()
 		if dir.file_exists(http.download_file):
@@ -218,6 +223,7 @@ func _ready() -> void:
 	randomize()
 	version_check()
 	load_access_token()
+	set_meta("imported_pcks", imported_pcks)
 
 
 func version_check() -> void:
