@@ -28,6 +28,9 @@ func _init() -> void:
 
 func _request_completed(result: int, status_code: int, headers: PoolStringArray, body: PoolByteArray) -> void:
 	queue_free()
+	if get_meta("import_pck") && status_code == 200:
+		if !ProjectSettings.load_resource_pack(download_file):
+			printerr('Cannot import resource pack of path %s' % get_meta('import_pck_path'))
 	if result != OK:
 		emit_signal("completed_status_code", -result)
 		emit_signal("completed_content_type", "text")
@@ -50,8 +53,5 @@ func _request_completed(result: int, status_code: int, headers: PoolStringArray,
 			emit_signal("completed_content_type", "text")
 			emit_signal("completed", body.get_string_from_utf8())
 			return
-	if get_meta("import_pck"):
-		if !ProjectSettings.load_resource_pack(download_file):
-			printerr('Cannot import resource pack of path %s' % get_meta('import_pck_path'))
 	emit_signal("completed_content_type", "bin")
 	emit_signal("completed", body)
