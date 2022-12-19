@@ -9,6 +9,7 @@ const CURRENT_BUILD_NUMBER_PATH = 'user://current_build'
 const USE_VERSION_CONTROL = true
 
 
+var build_number := ""
 var build_number_search_params := ""
 var custom_host_url := ""
 
@@ -230,7 +231,7 @@ func _ready() -> void:
 			printerr("Cannot find build number file, cannot automate version control.")
 			return
 		file.open(BUILD_NUMBER_PATH, File.READ)
-		var build_number := file.get_as_text()
+		build_number := file.get_as_text()
 		build_number_search_params = "?v=" + build_number
 		print("Current build number is " + build_number)
 		file.close()
@@ -264,4 +265,4 @@ func _ready() -> void:
 		if !OS.has_feature('JavaScript'):
 			printerr("This export doesn't have JavaScript interface, cannot referesh!")
 			return
-		JavaScript.eval("window.location.href = window.location.protocol + \"//\" + window.location.hostname;")
+		JavaScript.eval("let url = window.location.href.split('/');url[url.length - 1] = '';window.location.href = url.join('/');")
