@@ -231,7 +231,7 @@ func _ready() -> void:
 			printerr("Cannot find build number file, cannot automate version control.")
 			return
 		file.open(BUILD_NUMBER_PATH, File.READ)
-		build_number := file.get_as_text()
+		build_number = file.get_as_text()
 		build_number_search_params = "?v=" + build_number
 		print("Current build number is " + build_number)
 		file.close()
