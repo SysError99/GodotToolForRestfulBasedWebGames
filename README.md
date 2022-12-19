@@ -17,7 +17,7 @@ There are several ways to mitigate it, one of them is to separate PCK into piece
 1. Only tested on Linux.
 2. Dosen't have advanced build number specifier.
 3. Node.JS 16 minimum is required to run this tool.
-4. On iOS-based platforms, you only have 500 MB maximum of space for persistent storage stuffs. Means that you'll also need other techniques to exceed this barrier, such as downloading files and import them directly without writing them to persistent storage.
+4. On WebKit-based platforms (iOS, iPadOS, macOS, tvOS, and many others), you only have 500 MB maximum of space for persistent storage stuffs. Means that you'll also need other techniques to exceed this barrier, such as downloading files and import them directly without writing them to persistent storage (works well with Godot's PNG, JPG, and MP3 importers, perfect for large files such as large sprites, background music, voice files, etc.).
 
 ---
 ## Quickstart
@@ -119,7 +119,7 @@ Specify an array of URL list of PCKs to be removed from the device.
 #### `Api.host(url: String): Api`
 Specify host URL instead of using default one from current URL.
 
-#### `Api.http_auth_get(url: String, download_file: String): HTTPObject`
+#### `Api.http_auth_get(url: String = "", download_file: String = ""): HTTPObject`
 Make an HTTP GET request with `access-token` attached. If you specify `download_file` with non-empty parameter, it will also download any of results into path specified with it. You can `yield()` each parameters in this format (cannot change order):
 ```gdscript
 	var http := Api.http_auth_get(url)
@@ -128,16 +128,16 @@ Make an HTTP GET request with `access-token` attached. If you specify `download_
 	var body := yield(http, "completed")
 ```
 
-#### `Api.http_auth_post(url: String, data: Dictionary, download_file: String = ""): HTTPObject`
+#### `Api.http_auth_post(url: String = "", data: Dictionary = {}, download_file: String = ""): HTTPObject`
 Make an HTTP POST request with `access-token` attached. If you specify `download_file` with non-empty parameter, it will also download any of results into path specified with it.
 
-#### `Api.http_get(url: String, download): HTTPObject`
+#### `Api.http_get(url: String = "", download_file: String = ""): HTTPObject`
 Make an HTTP GET request. If you specify `download_file` with non-empty parameter, it will also download any of results into path specified with it.
 
 #### `Api.http_get_pck(url: String, replace: bool = false): HTTPObject`
 Download PCK file from specified URL and import it automatically if it gets download successfully. `replace` parameter specifies if you want to replace original file no matter what.
 
-#### `Api.http_post(url: String, data: Dictionary, download_file: String = ""): HTTPObject`
+#### `Api.http_post(url: String = "", data: Dictionary = {}, download_file: String = ""): HTTPObject`
 Make an HTTP POST request. If you specify `download_file` with non-empty parameter, it will also download any of results into path specified with it.
 
 
