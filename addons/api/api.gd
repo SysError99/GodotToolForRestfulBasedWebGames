@@ -45,7 +45,7 @@ func clear_pck(list: Array) -> void:
 		var path := convert_to_pck_path(e)
 		if dir.file_exists(path):
 			dir.remove(path)
-
+			print("Removed old PCK file: %s" % e)
 
 func convert_to_pck_path(string: String) -> String:
 	string = string.substr(0, string.find("?"))
