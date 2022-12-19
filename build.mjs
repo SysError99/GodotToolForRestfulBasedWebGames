@@ -2,11 +2,16 @@ import { dirname } from 'path';
 import { exec } from 'child_process';
 import { existsSync, readFileSync, renameSync, writeFileSync } from 'fs';
 import { fileURLToPath } from 'url';
-import { copyFile } from 'fs/promises';
 
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const configPath = './build.config.json';
+
+/**
+ * @param {number} x 
+ * @returns {string}
+ */
+const numberToBase64 = (x) => x.toString(2).split(/(?=(?:.{6})+(?!.))/g).map(v=>"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_"[parseInt(v,2)]).join("");
 
 
 /**
@@ -44,8 +49,6 @@ const log = (msg) => {
             JSON.stringify(
                 {
                     "bin": "/path/to/godot/headless/bin",
-                    "buildNumberPath": "./build.number.txt",
-                    "outBuildNumberPath": "./build/build.number.txt", // Unnecessary
                     "mainPreset": "Production",
                     "mainPresetPath": "./build/index.html",
                     "pckPresets": {
@@ -65,33 +68,9 @@ const log = (msg) => {
     );
     const binPath = config['bin'];
     const pckPresets = config['pckPresets'];
-    const buildNumberPath = config['buildNumberPath'];
     /**@type {string} */
     const mainPresetPath = config['mainPresetPath'];
-    const outBuildNumberPath = config["outBuildNumberPath"];
-    let currentBuildNumber = 0;
-
-
-    if (!existsSync(buildNumberPath)) {
-        writeFileSync(buildNumberPath, "0\n");
-        log(`Generated new build number indicator file at '${buildNumberPath}'.`);
-    } else {
-        currentBuildNumber = JSON.parse(readFileSync(buildNumberPath, { encoding: 'utf8' })) + 1;
-        writeFileSync(
-            buildNumberPath,
-            JSON.stringify(currentBuildNumber)
-        );
-        log(`Updated build number indicator.`);
-    }
-
-
-    const mainPresetUpdatedPath = mainPresetPath.split('.html').join(`${currentBuildNumber}.html`);
-
-
-    if (outBuildNumberPath) {
-        log(`Exporting build number to build directory...`);
-        await copyFile(buildNumberPath, outBuildNumberPath);
-    }
+    const mainPresetUpdatedPath = mainPresetPath.split('.html').join(`${numberToBase64(new Date().getTime())}.html`);
 
 
     log("Exporting main preset...");

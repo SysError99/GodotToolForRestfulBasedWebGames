@@ -3,16 +3,10 @@ class_name ApiNode
 
 
 const ACCESS_TOKEN_PATH = "user://access_token"
-const BUILD_NUMBER_PATH = "res://build.number.txt"
-const CURRENT_BUILD_NUMBER_PATH = 'user://current_build'
-const USE_VERSION_CONTROL = true
+const CURRENT_HTML_HASH_PATH = "user://current_version_html_hash"
 
 
-var build_number := ""
-var build_number_search_params := ""
 var custom_host_url := ""
-
-
 var http_tscn := preload("res://addons/api/http.tscn")
 var window := JavaScript.get_interface("window")
 
@@ -164,7 +158,7 @@ func http_get_pck(path: String, replace = false) -> HTTPObject:
 			http.emit_signal_http_request_completed()
 			return http
 	var req_err := http.request(
-		get_url() + path + build_number_search_params,
+		get_url() + path + "?r=%d" % randi(),
 		get_headers(),
 		true,
 		HTTPClient.METHOD_GET,
@@ -222,28 +216,44 @@ func set_access_token(value: String) -> void:
 
 func _ready() -> void:
 	randomize()
+	version_check()
 	load_access_token()
-	if USE_VERSION_CONTROL:
-		var file := File.new()
-		var dir := Directory.new()
-		if !dir.file_exists(BUILD_NUMBER_PATH):
-			printerr("Cannot find build number file, cannot automate version control.")
-			return
-		file.open(BUILD_NUMBER_PATH, File.READ)
-		build_number = file.get_as_text()
-		build_number_search_params = "?v=" + build_number
-		print("Current build number is " + build_number)
+
+
+func version_check() -> void:
+	var file := File.new()
+	var dir := Directory.new()
+	if !is_instance_valid(window):
+		printerr("Cannot get valid 'window' interface, cannot proceed version check.")
+		return
+	var http := host(window.location.href + "?r=%d" % randi()).http_get('')
+	var status_code := yield(http, "completed_status_code") as int
+	var content_type := yield(http, "completed_content_type") as String
+	var body = yield(http, "completed")
+	if status_code != 200 || content_type != "text":
+		printerr("%s returns %d (%s), cannnot proceed version check" % [window.location.href, status_code, content_type])
+		return
+	var html_hash := (body as String).sha256_text()
+	if !dir.file_exists(CURRENT_HTML_HASH_PATH):
+		version_control_behaviour()
+		print("This game runs on this machine for first time, creating hash file...")
+		file.open(CURRENT_HTML_HASH_PATH, File.WRITE)
+		file.store_string(html_hash)
 		file.close()
-		if !dir.file_exists(CURRENT_BUILD_NUMBER_PATH):
-			file.open(CURRENT_BUILD_NUMBER_PATH, File.WRITE)
-			file.store_string(build_number)
-			file.close()
-			return
-		file.open(CURRENT_BUILD_NUMBER_PATH, File.READ_WRITE)
-		var current_build := file.get_as_text()
-		if current_build != build_number:
-			file.store_string(build_number)
-			# Version control behaviour
-			Api.clear_all_pck()
-			# End Version control behaviour
-		file.close()
+		return
+	file.open(CURRENT_HTML_HASH_PATH, File.READ_WRITE)
+	var current_html_hash := file.get_as_text()
+	if current_html_hash == html_hash:
+		print("Version is up to date!")
+		return
+	file.store_string(html_hash)
+	file.close()
+	version_control_behaviour()
+	yield(get_tree().create_timer(1), "timeout")
+	print("Version isn't up to date, trying to refresh.")
+	JavaScript.eval("alert('There is newer version, app will reload.');")
+	JavaScript.eval("window.location.href = window.location.href;")
+
+
+func version_control_behaviour() -> void:
+	clear_all_pck()

@@ -33,8 +33,6 @@ Its structure will look something like this:
 ```json
 {
 	"bin": "/path/to/godot/headless/bin",
-	"buildNumberPath": "./build.number.txt",
-	"outBuildNumberPath": "./build/build.number.txt",
 	"mainPreset": "Production",
 	"mainPresetPath": "./build/index.html",
 	"pckPresets": {
@@ -48,7 +46,7 @@ Its structure will look something like this:
 
 3. Create `build` directory in your project directory, and put empty `.gdignore` file in it. This will be your default build directory for your project (you can specify your own build directory).
 
-4. In Godot export options, create an export preset with `HTML5` platform, and name it `Production`. On the right side, at `Resources` tab, in export non-resource files/folders section, add additional `build.number.txt` (or `*.txt` if you like) file to let Godot export version control file generated from this builder.
+4. In Godot export options, create an export preset with `HTML5` platform, and name it `Production`.
 
 4. On the command line, run `node build.mjs` to build your project and store it in the `build` directory.
 
