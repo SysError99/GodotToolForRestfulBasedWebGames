@@ -3,7 +3,6 @@ class_name ApiNode
 
 
 const ACCESS_TOKEN_PATH = "user://access_token"
-const BUILD_NUMBER_FILENAME = "build.number.txt"
 const BUILD_NUMBER_PATH = "res://build.number.txt"
 const CURRENT_BUILD_NUMBER_PATH = 'user://current_build'
 const USE_VERSION_CONTROL = true
@@ -248,21 +247,3 @@ func _ready() -> void:
 			Api.clear_all_pck()
 			# End Version control behaviour
 		file.close()
-		if !OS.get_name() == "HTML5":
-			return
-		var http := http_get(BUILD_NUMBER_FILENAME + "?%d" % randi())
-		var status := yield(http, "completed_status_code") as int
-		var content_type := yield(http, "completed_content_type") as String
-		var body = yield(http, "completed")
-		if status < 200 || status > 299 || content_type != "text":
-			printerr('%s returns %d (%s)' % [BUILD_NUMBER_FILENAME, status, content_type])
-			return
-		var version := body as String
-		if version == build_number:
-			print("Version is up to date!")
-			return
-		print("Version isn't up to date, trying to refresh.")
-		if !OS.has_feature('JavaScript'):
-			printerr("This export doesn't have JavaScript interface, cannot referesh!")
-			return
-		JavaScript.eval("let url = window.location.href.split('/');url[url.length - 1] = '';window.location.href = url.join('/');")

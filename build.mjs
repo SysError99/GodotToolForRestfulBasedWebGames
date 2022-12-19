@@ -1,6 +1,6 @@
 import { dirname } from 'path';
 import { exec } from 'child_process';
-import { existsSync, readFileSync, writeFileSync } from 'fs';
+import { existsSync, readFileSync, renameSync, writeFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { copyFile } from 'fs/promises';
 
@@ -86,8 +86,6 @@ const log = (msg) => {
 
 
     const mainPresetUpdatedPath = mainPresetPath.split('.html').join(`${currentBuildNumber}.html`);
-    const mainPresetUpdatedPathSplitted = mainPresetUpdatedPath.split('/');
-    const mainPresetUpdatedPathFilename = mainPresetUpdatedPathSplitted[mainPresetUpdatedPathSplitted.length - 1];
 
 
     if (outBuildNumberPath) {
@@ -97,29 +95,8 @@ const log = (msg) => {
 
 
     log("Exporting main preset...");
-    writeFileSync(
-        mainPresetPath,
-/*html*/`
-<!DOCTYPE html>
-<html>
-    <head>
-        <title>Redirecting...</title>
-        <meta charset="UTF-8" />
-        <script>
-            let url = window.location.href.split('/');
-            url[url.length - 1] = '${mainPresetUpdatedPathFilename}';
-            window.location.href = url.join('/');
-        </script>
-    </head>
-    <body>
-        Please enable JavaScript to continue.<br>
-        <br>
-        Redirecting...
-    </body>
-</html>
-`
-    );
     await execute(`${binPath} --export ${config['mainPreset']} ${mainPresetUpdatedPath}`, { cwd: __dirname });
+    renameSync(mainPresetUpdatedPath, mainPresetPath);
     log("Exporting main preset done.");
 
 
