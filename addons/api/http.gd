@@ -28,7 +28,7 @@ func _init() -> void:
 
 func _request_completed(result: int, status_code: int, headers: PoolStringArray, body: PoolByteArray) -> void:
 	queue_free()
-	if get_meta("import_pck") && status_code == 200:
+	if get_meta("import_pck", false) && status_code == 200:
 		if !ProjectSettings.load_resource_pack(download_file):
 			printerr('Cannot import resource pack of path %s' % get_meta('import_pck_path'))
 		else:
