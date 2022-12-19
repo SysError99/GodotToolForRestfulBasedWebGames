@@ -97,7 +97,7 @@ func host(url: String) -> ApiNode:
 	return self
 
 
-func http_auth_get(path: String, download_file: String = "") -> HTTPObject:
+func http_auth_get(path: String = "", download_file: String = "") -> HTTPObject:
 	var http := create_http()
 	http.download_file = download_file
 	var req_err := http.request(
@@ -114,7 +114,7 @@ func http_auth_get(path: String, download_file: String = "") -> HTTPObject:
 	return http
 
 
-func http_auth_post(path: String, dict_message: Dictionary, download_file: String = "") -> HTTPObject:
+func http_auth_post(path: String = "", dict_message: Dictionary = {}, download_file: String = "") -> HTTPObject:
 	var http := create_http()
 	http.download_file = download_file
 	var req_err := http.request(
@@ -130,7 +130,7 @@ func http_auth_post(path: String, dict_message: Dictionary, download_file: Strin
 	return http
 
 
-func http_get(path: String, download_file: String = "") -> HTTPObject:
+func http_get(path: String = "", download_file: String = "") -> HTTPObject:
 	var http := create_http()
 	http.download_file = download_file
 	var req_err := http.request(
@@ -170,7 +170,7 @@ func http_get_pck(path: String, replace = false) -> HTTPObject:
 	return http
 
 
-func http_post(path: String, dict_message: Dictionary, download_file: String = "") -> HTTPObject:
+func http_post(path: String = "", dict_message: Dictionary = {}, download_file: String = "") -> HTTPObject:
 	var http := create_http()
 	http.download_file = download_file
 	var req_err := http.request(
