@@ -3,7 +3,7 @@ class_name ApiNode
 
 
 const ACCESS_TOKEN_PATH = "user://access_token"
-const CURRENT_HTML_HASH_PATH = "user://current_version_html_hash"
+const CURRENT_VERSION_PATH = "user://current_version"
 
 
 var custom_host_url := ""
@@ -226,27 +226,32 @@ func version_check() -> void:
 	if !is_instance_valid(window):
 		printerr("Cannot get valid 'window' interface, cannot proceed version check.")
 		return
-	var http := host(window.location.href + "?r=%d" % randi()).http_get('')
+	var version_path := window.location.href as String
+	var version_path_splitted := version_path.split("/")
+	if !".html" in version_path_splitted[version_path_splitted.size() - 1]:
+		version_path += "index.html"
+	version_path += ".ver.txt?r=%d" % randi()
+	var http := host(version_path).http_get()
 	var status_code := yield(http, "completed_status_code") as int
 	var content_type := yield(http, "completed_content_type") as String
 	var body = yield(http, "completed")
 	if status_code != 200 || content_type != "text":
 		printerr("%s returns %d (%s), cannnot proceed version check" % [window.location.href, status_code, content_type])
 		return
-	var html_hash := (body as String).sha256_text()
-	if !dir.file_exists(CURRENT_HTML_HASH_PATH):
+	var version := body as String
+	if !dir.file_exists(CURRENT_VERSION_PATH):
 		version_control_behaviour()
 		print("This game runs on this machine for first time, creating hash file...")
-		file.open(CURRENT_HTML_HASH_PATH, File.WRITE)
-		file.store_string(html_hash)
+		file.open(CURRENT_VERSION_PATH, File.WRITE)
+		file.store_string(version)
 		file.close()
 		return
-	file.open(CURRENT_HTML_HASH_PATH, File.READ_WRITE)
-	var current_html_hash := file.get_as_text()
-	if current_html_hash == html_hash:
+	file.open(CURRENT_VERSION_PATH, File.READ_WRITE)
+	var current_version := file.get_as_text()
+	if current_version == version:
 		print("Version is up to date!")
 		return
-	file.store_string(html_hash)
+	file.store_string(version)
 	file.close()
 	version_control_behaviour()
 	yield(get_tree().create_timer(1), "timeout")

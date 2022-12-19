@@ -68,9 +68,16 @@ const log = (msg) => {
     );
     const binPath = config['bin'];
     const pckPresets = config['pckPresets'];
+    const currentVersion = numberToBase64(new Date().getTime());
     /**@type {string} */
     const mainPresetPath = config['mainPresetPath'];
-    const mainPresetUpdatedPath = mainPresetPath.split('.html').join(`${numberToBase64(new Date().getTime())}.html`);
+    const mainPresetUpdatedPath = mainPresetPath.split('.html').join(`.${currentVersion}.html`);
+    const mainPresetVersionPath = mainPresetPath.split('.html').join(`.html.ver.txt`);
+
+
+    log('Writing version indicator...');
+    writeFileSync(mainPresetVersionPath, currentVersion);
+    log('Writing version indicatior done.');
 
 
     log("Exporting main preset...");
