@@ -262,8 +262,6 @@ func _ready() -> void:
 			return
 		print("Version isn't up to date, trying to refresh.")
 		if !OS.has_feature('JavaScript'):
+			printerr("This export doesn't have JavaScript interface, cannot referesh!")
 			return
-		var window := JavaScript.get_interface("window")
-		if !is_instance_valid(window):
-			return
-		window.reload()
+		JavaScript.eval("window.location.href = window.location.protocol + \"//\" + window.location.hostname;")
