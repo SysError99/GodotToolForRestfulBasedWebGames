@@ -23,7 +23,7 @@ var access_token_loaded := false
 func clear_all_pck() -> void:
 	var dir := Directory.new()
 	if dir.open("user://") != OK:
-		printerr("Cannot open user folder when trying to clearn up all PCKs!")
+		printerr("Cannot open user folder when trying to clean up all PCKs!")
 		return
 	dir.list_dir_begin(true, true)
 	while true:
