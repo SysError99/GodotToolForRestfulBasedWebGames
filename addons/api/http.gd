@@ -30,10 +30,11 @@ func _request_completed(result: int, status_code: int, headers: PoolStringArray,
 	queue_free()
 	if get_meta("import_pck", false) && status_code == 200:
 		if !ProjectSettings.load_resource_pack(download_file):
-			printerr('Cannot import resource pack of path %s' % get_meta('import_pck_path'))
-		else:
-			var imported_pcks := api.get_meta("imported_pcks", []) as Array
-			imported_pcks.push_back(download_file)
+			printerr('Cannot import resource pack of path %s, trying to redownload...' % get_meta('import_pck_path'))
+			emit_signal_http_request_completed_error(1)
+			return
+		var imported_pcks := api.get_meta("imported_pcks", []) as Array
+		imported_pcks.push_back(download_file)
 	if result != OK:
 		emit_signal("completed_status_code", -result)
 		emit_signal("completed_content_type", "text")
