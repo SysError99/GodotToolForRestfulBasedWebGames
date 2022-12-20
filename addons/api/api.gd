@@ -232,12 +232,12 @@ func version_check() -> void:
 	if !is_instance_valid(window):
 		printerr("Cannot get valid 'window' interface, cannot proceed version check.")
 		return
-	var version_path := window.location.href as String
-	var version_path_splitted := version_path.split("/")
-	if !".html" in version_path_splitted[version_path_splitted.size() - 1]:
-		version_path += "index.html"
-	version_path += ".ver.txt?r=%d" % randi()
-	var http := host(version_path).http_get()
+	var version_file_url := window.location.href as String
+	var version_file_url_splitted := version_file_url.split("/")
+	if !".html" in version_file_url_splitted[version_file_url_splitted.size() - 1]:
+		version_file_url += "index.html"
+	version_file_url += ".ver.txt?r=%d" % randi()
+	var http := host(version_file_url).http_get()
 	var status_code := yield(http, "completed_status_code") as int
 	var content_type := yield(http, "completed_content_type") as String
 	var body = yield(http, "completed")
