@@ -259,6 +259,12 @@ func version_check() -> void:
 		return
 	file.store_string(version)
 	file.close()
+	var os_executable_path := OS.get_executable_path().split('.')
+	if os_executable_path.size() == 2:
+		var version_from_os := os_executable_path[1]
+		if version_from_os == version:
+			print("Version reported from OS matches with version from server, no need to refresh.")
+			return
 	version_control_behaviour()
 	yield(get_tree().create_timer(1), "timeout")
 	print("Version isn't up to date, trying to refresh.")
