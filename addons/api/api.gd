@@ -221,8 +221,8 @@ func set_access_token(value: String) -> void:
 
 func _ready() -> void:
 	randomize()
-	version_check()
 	load_access_token()
+	version_check_loop()
 	set_meta("imported_pcks", imported_pcks)
 
 
@@ -259,17 +259,23 @@ func version_check() -> void:
 		return
 	file.store_string(version)
 	file.close()
+	version_control_behaviour()
 	var os_executable_path := OS.get_executable_path().split('.')
 	if os_executable_path.size() == 2:
 		var version_from_os := os_executable_path[1]
 		if version_from_os == version:
 			print("Version reported from OS matches with version from server, no need to refresh.")
 			return
-	version_control_behaviour()
 	yield(get_tree().create_timer(1), "timeout")
 	print("Version isn't up to date, trying to refresh.")
 	JavaScript.eval("alert('There is newer version, app will reload.');")
 	JavaScript.eval("window.location.href = window.location.href;")
+
+
+func version_check_loop() -> void:
+	while true:
+		version_check()
+		yield(get_tree().create_timer(60), "timeout")
 
 
 func version_control_behaviour() -> void:
