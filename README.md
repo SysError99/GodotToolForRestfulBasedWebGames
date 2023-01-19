@@ -23,13 +23,16 @@ There are several ways to mitigate it, one of them is to separate PCK into piece
 ## Quickstart
 
 ### Building Games
-1. Simply copy all files from this repository (excluding Git-related stuffs, and `README.md`) to your Godot project folder. Then, in command line shell of project directory, run:
+1. Simply copy all files from this repository (excluding Git-related stuffs, and `README.md`) to your Godot project folder. Then, in command line shell of project folder, run:
+
 ```
 node build.mjs
 ```
-on your project directory to initialise `build.config.json` file.
+
+on your project folder to initialise `build.config.json` file.
 
 Its structure will look something like this:
+
 ```json
 {
 	"bin": "/path/to/godot/headless/bin",
@@ -40,24 +43,27 @@ Its structure will look something like this:
 	},
 }
 ```
+
 *You can remove `NameOfPck` part as we will create proper ones later.*
 
 2. In the generated `build.config.json` file, make change of `bin` path with path of your Godot Editor (or headless) executable.
 
-3. Create `build` directory in your project directory, and put empty `.gdignore` file in it. This will be your default build directory for your project (you can specify your own build directory).
+3. Create `build` folder in your project folder, and put empty `.gdignore` file in it. This will be your default build folder for your project (you can specify your own build folder).
 
 4. In Godot export options, create an export preset with `HTML5` platform, and name it `Production`.
 
-4. On the command line, run `node build.mjs` to build your project and store it in the `build` directory.
+4. On the command line, run `node build.mjs` to build your project and store it in the `build` folder.
 
 ### Creating PCK Exporting Preset And Importing It At Runtime
 This will help reducing your main PCK size, by separating it into pieces and downloading it on-demand.
 
-1. In Godot export options, create new preset with `HTML5` platform, and name it anything you want (e.g., `pck_2022_12_12_patch`). In `Resources` Tab, select `Export selected resources (and all dependencies)` which will let you select all related files that will be included in the preset.
+First and foremost, I recommend to also separate folder for all exporting presets, which helps selecting files for each presets , and excluding files in main preset to be much easier. For example, create a folder named `pck` to store all folders for each exporting presets.
 
-I recommend to also separate directory for all exporting presets, which helps selecting files for each presets , and excluding files in main preset to be much easier. For example, create a directory named `pck` to store all directories for each exporting presets.
 ```
 - your_project
+	- addons
+	- fnt
+	- img
 	- obj
 	- res
 	- pck
@@ -65,13 +71,23 @@ I recommend to also separate directory for all exporting presets, which helps se
 		- pck_2022_12_20_patch
 		- pck_2022_12_30_patch
 		...
+	- pck.core
+		- core_gameplay
+		- core_assets
 	- scn
+	- snd
 	- icon.png
 ```
-In your main exporting preset, assuming that it's named `Production`, you also need to exclude files that already got selected in exporting preset from step 1. If you already separated directory following the method suggested above, you may just add wildcard (in this case `pck/*`) into `Filter to exclude file/folders from project` to prevent your main preset to export PCK files intended to be downloaded separately.
+
+In your main exporting preset, assuming that it's named `Production`, you also need to exclude files that already got selected in exporting preset from step 1. If you already separated folder following the method suggested above, you may just add wildcard (in this case `pck/*`, and `pck.core/*`) into `Filter to exclude file/folders from project` to prevent your main preset to export PCK files intended to be downloaded separately.
+
+1. In Godot export options, create new preset with `HTML5` platform, and name it anything you want (e.g., `pck_2022_12_12_patch`). In `Resources` Tab, select `Export selected resources (and all dependencies)` which will let you select all related files that will be included in the preset.
+
+Note: Sometimes, if the PCK also depends on resources on folders outside itself or `/pck/`, you also need to add list of folders outside its PCK directory into `Filters to exclude files/folders from project` to explicitly exclude files and folders that already have been loaded in other PCK files or the game itself. The easiest way is to just add all folder names inside root folder of the project (in this case, `addons/*,fnt/*,img/*,obj/*,res/*,scn/*,snd/*`).
 
 2. In `build.config.json`, at `pckPresets`, add new preset with name as `key`, along with export path.
-For example, if you want to add `pck_2022_12_12_patch` and export it to build directory, it will be something like this:
+For example, if you want to add `pck_2022_12_12_patch` and export it to build folder, it will be something like this:
+
 ```json
 "pckPresets": {
 	"pck_2022_12_12_patch": "./build/pck/pck_2022_12_12_patch.pck"
@@ -80,7 +96,8 @@ For example, if you want to add `pck_2022_12_12_patch` and export it to build di
 
 3. To download PCK files and import it, you need to first adding `api.gd` provided by this repository into AutoLoad (Singleton) of your Godot project. In this case, we will import it as `Api`. After this one-time procedure, you can now use PCK download function.
 
-To download PCK and import it automatically, simply call GDScript function and wait until it's completed. Assuming that you also uploaded PCK at a same hosting server that you store your main game files, and it's stored at `pck` directory and name of the file is `pck_2022_12_12_patch.pck` , its path will be `https://your.web.site/pck/pck_2022_12_12_patch.pck`. Then, you can call function to download PCK file and download it automatically:
+Then, simply call GDScript function and wait until it's completed. Assuming that you also uploaded PCK at a same hosting server that you store your main game files, and it's stored at `pck` folder and name of the file is `pck_2022_12_12_patch.pck` , its path will be `https://your.web.site/pck/pck_2022_12_12_patch.pck`. Then, you can call function to download PCK file and download it automatically:
+
 ```gdscript
 	var http := Api.http_get_pck("pck/pck_2022_12_12_patch.pck")
 	yield(http, "completed")
@@ -88,7 +105,9 @@ To download PCK and import it automatically, simply call GDScript function and w
 	# For example, to open up new scene from downloaded PCK.
 	get_tree().change_scene("res://pck_2022_12_12_patch/new_scene.tscn")
 ```
+
 Still, if you aren't sure that if the PCK gets downloaded and imported properly, the function also provides status code from HTTP request object:
+
 ```gdscript
 	var http := Api.http_get_pck("pck/pck_2022_12_12_patch.pck")
 	var status_code := yield(http, "completed_status_code")
@@ -97,13 +116,16 @@ Still, if you aren't sure that if the PCK gets downloaded and imported properly,
 		return
 	get_tree().change_scene("res://pck_2022_12_12_patch/new_scene.tscn")
 ```
+
 If you upload PCK files at different hosting server, you need to change hostname to that location by using `Api.host()` function, chained with `http.get_pck()` as usual:
+
 ```gdscript
 	var http := Api.host("http://cdn.of.new.site/").http_get_pck("pck/pck_2022_12_12_patch")
 	yield(http, "completed")
 	get_tree().change_scene("res://pck_2022_12_12_patch/new_scene.tscn")
 ```
-4. To build the project along with PCK files, run `node build.mjs` to build your project, then publish build directory in your desired methods.
+
+4. To build the project along with PCK files, run `node build.mjs` to build your project, then publish build folder in your desired methods.
 
 ---
 ### Functions
