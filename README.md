@@ -7,6 +7,8 @@ Godot is never meant to be run on HTML5 platform but Godot team managed to port 
 
 There are several ways to mitigate it, one of them is to separate PCK into pieces and download them on-demand. This method comes with a cost, that you need to keep exporting all PCK files related every time you want to update your game. Even worse that you need to also make change of PCK URL parameters to trigger cache reset in browser and download newer version of PCK files. This tool will ease exporting process by help automating build process of PCK files, providing application interface for RESTful API, and PCK downloading and updating functions.
 
+*In case you wonder if this project is really used in real world scenarios, I'm already using this tool in my own production work :)*
+
 ---
 ## Features
 1. Simple one-line command to automate building process of specified PCK presets from `export_presets.cfg`, along with generating build revision indicator file, making HTML5 game updating easier.
