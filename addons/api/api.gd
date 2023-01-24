@@ -13,6 +13,7 @@ var window := JavaScript.get_interface("window")
 
 
 var access_token_loaded := false
+var version_checked := false
 
 
 func clear_all_pck() -> void:
@@ -243,6 +244,7 @@ func version_check() -> void:
 	var body = yield(http, "completed")
 	if status_code != 200 || content_type != "text":
 		printerr("%s returns %d (%s), cannnot proceed version check" % [window.location.href, status_code, content_type])
+		version_checked = true
 		return
 	var version := body as String
 	if !dir.file_exists(CURRENT_VERSION_PATH):
@@ -251,20 +253,24 @@ func version_check() -> void:
 		file.open(CURRENT_VERSION_PATH, File.WRITE)
 		file.store_string(version)
 		file.close()
+		version_checked = true
 		return
 	file.open(CURRENT_VERSION_PATH, File.READ_WRITE)
 	var current_version := file.get_as_text()
 	if current_version == version:
 		print("Version is up to date!")
+		version_checked = true
 		return
 	file.store_string(version)
 	file.close()
 	version_control_behaviour()
+	version_checked = true
 	var os_executable_path := OS.get_executable_path().split('.')
 	if os_executable_path.size() == 2:
 		var version_from_os := os_executable_path[1]
 		if version_from_os == version:
 			print("Version reported from OS matches with version from server, no need to refresh.")
+			
 			return
 	yield(get_tree().create_timer(1), "timeout")
 	print("Version isn't up to date, trying to refresh.")
