@@ -249,7 +249,7 @@ func version_check() -> void:
 	var version := body as String
 	if !dir.file_exists(CURRENT_VERSION_PATH):
 		version_control_behaviour()
-		print("This game runs on this machine for first time, creating hash file...")
+		print("Generating version indicator...")
 		file.open(CURRENT_VERSION_PATH, File.WRITE)
 		file.store_string(version)
 		file.close()
@@ -271,6 +271,7 @@ func version_check() -> void:
 		if version_from_os == version:
 			print("Version reported from OS matches with version from server, no need to refresh.")
 			return
+		dir.remove(CURRENT_VERSION_PATH)
 		yield(get_tree().create_timer(1), "timeout")
 		print("Version isn't up to date, trying to refresh.")
 		JavaScript.eval("alert('There is newer version, app will reload.');")
