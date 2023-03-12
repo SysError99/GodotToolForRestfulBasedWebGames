@@ -232,6 +232,7 @@ func version_check() -> void:
 	var dir := Directory.new()
 	if !is_instance_valid(window):
 		printerr("Cannot get valid 'window' interface, cannot proceed version check.")
+		version_checked = true
 		return
 	var version_file_url := window.location.href as String
 	var version_file_url_splitted := version_file_url.split("/")
