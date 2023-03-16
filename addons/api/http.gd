@@ -30,7 +30,7 @@ func _request_completed(result: int, status_code: int, headers: PoolStringArray,
 	queue_free()
 	if get_meta("import_pck", false) && status_code == 200:
 		if !ProjectSettings.load_resource_pack(download_file):
-			printerr('Cannot import resource pack of path %s' % get_meta('import_pck_path'))
+			printerr("Cannot import resource pack of path %s" % get_meta("import_pck_path"))
 			emit_signal_http_request_completed_error(1)
 			return
 		var imported_pcks := api.get_meta("imported_pcks", []) as Array
@@ -44,10 +44,10 @@ func _request_completed(result: int, status_code: int, headers: PoolStringArray,
 		emit_signal("completed_status_code", status_code)
 	for label in headers:
 		if "access-token: " in label:
-			api.set_meta("access-token", label.replace('access-token: ',""))
+			api.set_meta("access-token", label.replace("access-token: ",""))
 			api.call_deferred("save_access_token")
 		if "access-token:" in label:
-			api.access_token = label.replace('access-token:',"")
+			api.access_token = label.replace("access-token:","")
 			api.call_deferred("save_access_token")
 		if "application/json" in label:
 			emit_signal("completed_content_type", "json")

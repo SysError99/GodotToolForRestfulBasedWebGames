@@ -90,7 +90,7 @@ func get_url() -> String:
 		return url
 	if is_instance_valid(window):
 		if is_instance_valid(window.location):
-			return window.location.protocol + '//' + window.location.host + "/"
+			return window.location.protocol + "//" + window.location.host + "/"
 	return "http://localhost:8788/"
 
 
@@ -266,7 +266,7 @@ func version_check() -> void:
 		return
 	version_control_behaviour()
 	version_checked = true
-	var os_executable_path := OS.get_executable_path().split('.')
+	var os_executable_path := OS.get_executable_path().split(".")
 	if os_executable_path.size() == 2:
 		var version_from_os := os_executable_path[1]
 		if version_from_os == version:
