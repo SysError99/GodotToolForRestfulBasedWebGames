@@ -41,6 +41,7 @@ class HTTPObject extends HTTPRequest:
 				var imported_pcks := api.get_meta("imported_pcks", []) as Array
 				imported_pcks.push_back(download_file)
 				return
+			printerr("PCK download of %s failed, target returns %d" % [get_meta('import_pck_path'), status_code])
 			api.clear_pck([ download_file ])
 		if result != OK:
 			emit_signal("completed_status_code", -result)
