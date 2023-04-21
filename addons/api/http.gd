@@ -30,6 +30,7 @@ func _request_completed(result: int, status_code: int, headers: PoolStringArray,
 	queue_free()
 	if get_meta("import_pck", false) && status_code == 200:
 		if !ProjectSettings.load_resource_pack(download_file):
+			api.call("clear_pck", [ download_file ])
 			printerr("Cannot import resource pack of path %s" % get_meta("import_pck_path"))
 			emit_signal_http_request_completed_error(1)
 			return
