@@ -2,6 +2,9 @@ extends Node
 class_name ApiNode
 
 
+const USE_ROOT_URL = true
+
+
 class HTTPObject extends HTTPRequest:
 	signal completed(body)
 	signal completed_content_type(type)
@@ -155,7 +158,10 @@ func get_url() -> String:
 		return url
 	if is_instance_valid(window):
 		if is_instance_valid(window.location):
-			return window.location.protocol + "//" + window.location.host + "/"
+			if USE_ROOT_URL:
+				return window.location.protocol + "//" + window.location.host + "/"
+			else:
+				return window.location.href + "/"
 	return "http://localhost:8788/"
 
 
