@@ -40,6 +40,8 @@ class HTTPObject extends HTTPRequest:
 		if import_pck:
 			if status_code == 200:
 				if !ProjectSettings.load_resource_pack(download_file):
+					var url := import_pck_req_params[0] as String
+					import_pck_req_params[0] = url.substr(0, url.find("?")) + ("?r=%d" % randi())
 					api.clear_pck([ download_file ])
 					callv("request", import_pck_req_params)
 					printerr("Cannot import resource pack of path '%s', trying to redownload..." % import_pck_path)
