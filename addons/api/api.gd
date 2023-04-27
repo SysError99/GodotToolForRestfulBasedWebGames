@@ -9,9 +9,13 @@ class HTTPObject extends HTTPRequest:
 	signal completed(body)
 	signal completed_content_type(type)
 	signal completed_status_code(status_code)
+	signal get_pck_again(path)
 
 
 	var api: ApiNode
+	var import_pck := false
+	var import_pck_path := ""
+	var import_pck_req_params := []
 
 
 	func _init(parent: ApiNode) -> void:
@@ -33,32 +37,30 @@ class HTTPObject extends HTTPRequest:
 
 
 	func _request_completed(result: int, status_code: int, headers: PoolStringArray, body: PoolByteArray) -> void:
-		queue_free()
-		if get_meta("import_pck", false):
+		if import_pck:
 			if status_code == 200:
 				if !ProjectSettings.load_resource_pack(download_file):
 					api.clear_pck([ download_file ])
-					printerr('Cannot import resource pack of path %s, trying to redownload...' % get_meta('import_pck_path'))
-					emit_signal_http_request_completed_error(1)
+					callv("request", import_pck_req_params)
+					printerr("Cannot import resource pack of path '%s', trying to redownload..." % import_pck_path)
 					return
-				var imported_pcks := api.get_meta("imported_pcks", []) as Array
-				imported_pcks.push_back(download_file)
+				api.imported_pcks.push_back(download_file)
 			else:
-				printerr("PCK download of %s failed, target returns %d" % [get_meta('import_pck_path'), status_code])
+				printerr("PCK download of %s failed, target returns %d." % [import_pck_path, status_code])
 				api.clear_pck([ download_file ])
+		queue_free()
 		if result != OK:
 			emit_signal("completed_status_code", -result)
 			emit_signal("completed_content_type", "text")
 			emit_signal("completed", "")
 			return
-		else:
-			emit_signal("completed_status_code", status_code)
+		emit_signal("completed_status_code", status_code)
 		for label in headers:
 			if "access-token: " in label:
-				api.set_meta("access-token", label.replace('access-token: ',""))
+				api.access_token = label.replace("access-token: ", "")
 				api.save_access_token()
 			if "access-token:" in label:
-				api.access_token = label.replace('access-token:',"")
+				api.access_token = label.replace("access-token:", "")
 				api.save_access_token()
 			if "application/json" in label:
 				emit_signal("completed_content_type", "json")
@@ -81,6 +83,7 @@ var imported_pcks := []
 var window := JavaScript.get_interface("window")
 
 
+var access_token := ""
 var access_token_loaded := false
 var version_checked := false
 
@@ -123,19 +126,15 @@ func create_http() -> HTTPObject:
 	return http
 
 
-func get_access_token() -> String:
-	return get_meta("access-token", "")
-
-
 func get_auth_headers() -> PoolStringArray:
 	return PoolStringArray([
-		"access-token: " + get_access_token(),
+		"access-token: " + access_token,
 	])
 
 
 func get_auth_json_headers() -> PoolStringArray:
 	return PoolStringArray([
-		"access-token: " + get_access_token(),
+		"access-token: " + access_token,
 		"Content-Type: applicaiton/json",
 	])
 
@@ -221,9 +220,17 @@ func http_get(path: String = "", download_file: String = "") -> HTTPObject:
 
 func http_get_pck(path: String, replace = false) -> HTTPObject:
 	var http := create_http()
+	var req_params := [
+		get_url() + path + "?r=%d" % randi(),
+		get_headers(),
+		true,
+		HTTPClient.METHOD_GET,
+		"",
+	]
 	http.download_file = convert_to_pck_path(path)
-	http.set_meta("import_pck_path", path)
-	http.set_meta("import_pck", true)
+	http.import_pck_req_params = req_params
+	http.import_pck_path = path
+	http.import_pck = true
 	if http.download_file in imported_pcks:
 		printerr("PCK already gets imported, if PCK replace is intended, the game should restart.")
 		http.emit_signal_http_request_completed()
@@ -231,16 +238,10 @@ func http_get_pck(path: String, replace = false) -> HTTPObject:
 	if !replace:
 		var dir := Directory.new()
 		if dir.file_exists(http.download_file):
-			printerr("File %s already exists, skipping PCK download." % path)
+			printerr("File %s already exists, trying to import..." % path)
 			http.emit_signal_http_request_completed()
 			return http
-	var req_err := http.request(
-		get_url() + path + "?r=%d" % randi(),
-		get_headers(),
-		true,
-		HTTPClient.METHOD_GET,
-		""
-		)
+	var req_err = http.callv("request", req_params)
 	if req_err != OK:
 		printerr("Error while trying to GET PCK, code %d." % req_err)
 		http.emit_signal_http_request_completed_error(req_err)
@@ -270,7 +271,7 @@ func load_access_token() -> void:
 		if file.open(ACCESS_TOKEN_PATH, File.READ) != OK:
 			printerr("Cannot open access token!")
 			return
-		set_access_token(file.get_as_text())
+		access_token = file.get_as_text()
 		file.close()
 		print("Access token loaded.")
 	access_token_loaded = true
@@ -281,13 +282,13 @@ func save_access_token() -> void:
 	if file.open(ACCESS_TOKEN_PATH, File.WRITE) != OK:
 		printerr("Canot open access token file to write!")
 		return
-	file.store_string(get_access_token())
+	file.store_string(access_token)
 	file.close()
 	print("Access token saved.")
 
 
 func set_access_token(value: String) -> void:
-	set_meta("access-token", value)
+	access_token = value
 	save_access_token()
 
 
@@ -295,7 +296,6 @@ func _ready() -> void:
 	randomize()
 	load_access_token()
 	version_check_loop()
-	set_meta("imported_pcks", imported_pcks)
 
 
 func version_check() -> void:
