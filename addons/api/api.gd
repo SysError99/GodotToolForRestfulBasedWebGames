@@ -338,21 +338,11 @@ func version_check() -> void:
 		version_checked = true
 		return
 	version_control_behaviour()
-	version_checked = true
-	var os_executable_path := OS.get_executable_path().split(".")
-	if os_executable_path.size() == 2:
-		var version_from_os := os_executable_path[1]
-		if version_from_os == version:
-			print("Version reported from OS matches with version from server, no need to refresh.")
-			return
-		dir.remove(CURRENT_VERSION_PATH)
-		yield(get_tree().create_timer(1), "timeout")
-		print("Version isn't up to date, trying to refresh.")
-		JavaScript.eval("alert('There is newer version, app will reload.');")
-		JavaScript.eval("window.location.href = window.location.href;")
-	else:
-		printerr("Cannot check game version with OS executation path, possibly something is wrong.")
-		JavaScript.eval("alert('Possibly caching system is broken, you should reset cache and site data.');")
+	dir.remove(CURRENT_VERSION_PATH)
+	yield(get_tree().create_timer(1), "timeout")
+	print("Version isn't up to date, trying to refresh.")
+	JavaScript.eval("alert('There is newer version, app will reload.');")
+	JavaScript.eval("window.location.href = window.location.href;")
 
 
 func version_check_loop() -> void:
