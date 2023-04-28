@@ -42,14 +42,14 @@ class HTTPObject extends HTTPRequest:
 				if !ProjectSettings.load_resource_pack(download_file):
 					var url := import_pck_req_params[0] as String
 					import_pck_req_params[0] = url.substr(0, url.find("?")) + ("?r=%d" % randi())
-					api.clear_pck([ download_file ])
+					api.clear_pck([ import_pck_path ])
 					callv("request", import_pck_req_params)
 					printerr("Cannot import resource pack of path '%s', trying to redownload..." % import_pck_path)
 					return
 				api.imported_pcks.push_back(download_file)
 			else:
 				printerr("PCK download of %s failed, target returns %d." % [import_pck_path, status_code])
-				api.clear_pck([ download_file ])
+				api.clear_pck([ import_pck_path ])
 		queue_free()
 		if result != OK:
 			emit_signal("completed_status_code", -result)
