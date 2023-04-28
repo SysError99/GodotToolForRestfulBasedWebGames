@@ -22,17 +22,26 @@ class HTTPObject extends HTTPRequest:
 		api = parent
 		if connect("request_completed", self, "_request_completed") != OK:
 			printerr("Cannot connect a signal of HTTPObject!")
+	
+
+	func safe_request(url: String, custom_headers: PoolStringArray = PoolStringArray(), ssl_validation_domain: bool = true, method: int = 0, request_data: String = "") -> void:
+		if not is_inside_tree():
+			yield(self, "tree_entered")
+		yield(get_tree(), "idle_frame")
+		request(url, custom_headers, ssl_validation_domain, method, request_data)
 
 
 	func emit_signal_http_request_completed(status_code = 200, headers = PoolStringArray(), body = PoolByteArray()) -> void:
-		for n in 2:
-			yield(get_tree(), "idle_frame")
+		if not is_inside_tree():
+			yield(self, "tree_entered")
+		yield(get_tree(), "idle_frame")
 		emit_signal("request_completed", OK, status_code, headers, body)
 
 
 	func emit_signal_http_request_completed_error(err) -> void:
-		for n in 2:
-			yield(get_tree(), "idle_frame")
+		if not is_inside_tree():
+			yield(self, "tree_entered")
+		yield(get_tree(), "idle_frame")
 		emit_signal("request_completed", err, 0, PoolStringArray(), PoolByteArray())
 
 
@@ -43,7 +52,7 @@ class HTTPObject extends HTTPRequest:
 					var url := import_pck_req_params[0] as String
 					import_pck_req_params[0] = url.substr(0, url.find("?")) + ("?r=%d" % randi())
 					api.clear_pck([ import_pck_path ])
-					callv("request", import_pck_req_params)
+					callv("safe_request", import_pck_req_params)
 					printerr("Cannot import resource pack of path '%s', trying to redownload..." % import_pck_path)
 					return
 				api.imported_pcks.push_back(download_file)
@@ -243,7 +252,7 @@ func http_get_pck(path: String, replace = false) -> HTTPObject:
 			printerr("File %s already exists, trying to import..." % path)
 			http.emit_signal_http_request_completed()
 			return http
-	var req_err = http.callv("request", req_params)
+	var req_err = http.callv("safe_request", req_params)
 	if req_err != OK:
 		printerr("Error while trying to GET PCK, code %d." % req_err)
 		http.emit_signal_http_request_completed_error(req_err)
