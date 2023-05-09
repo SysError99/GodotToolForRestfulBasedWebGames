@@ -183,49 +183,39 @@ func host(url: String) -> ApiNode:
 func http_auth_get(path: String = "", download_file: String = "") -> HTTPObject:
 	var http := create_http()
 	http.download_file = download_file
-	var req_err := http.request(
+	http.safe_request(
 		get_url() + path,
 		get_auth_headers(),
 		true,
 		HTTPClient.METHOD_GET,
 		""
 		)
-	
-	if req_err != OK:
-		printerr("Error while trying to POST, code %d." % req_err)
-		http.emit_signal_http_request_completed_error(req_err)
 	return http
 
 
 func http_auth_post(path: String = "", dict_message: Dictionary = {}, download_file: String = "") -> HTTPObject:
 	var http := create_http()
 	http.download_file = download_file
-	var req_err := http.request(
+	http.safe_request(
 		get_url() + path,
 		get_auth_json_headers(),
 		true,
 		HTTPClient.METHOD_POST,
 		JSON.print(dict_message)
 		)
-	if req_err != OK:
-		printerr("Error while trying to POST, code %d." % req_err)
-		http.emit_signal_http_request_completed_error(req_err)
 	return http
 
 
 func http_get(path: String = "", download_file: String = "") -> HTTPObject:
 	var http := create_http()
 	http.download_file = download_file
-	var req_err := http.request(
+	http.safe_request(
 		get_url() + path,
 		get_headers(),
 		true,
 		HTTPClient.METHOD_GET,
 		""
 		)
-	if req_err != OK:
-		printerr("Error while trying to POST, code %d." % req_err)
-		http.emit_signal_http_request_completed_error(req_err)
 	return http
 
 
@@ -252,26 +242,20 @@ func http_get_pck(path: String, replace = false) -> HTTPObject:
 			printerr("File %s already exists, trying to import..." % path)
 			http.emit_signal_http_request_completed()
 			return http
-	var req_err = http.callv("safe_request", req_params)
-	if req_err != OK:
-		printerr("Error while trying to GET PCK, code %d." % req_err)
-		http.emit_signal_http_request_completed_error(req_err)
+	http.callv("safe_request", req_params)
 	return http
 
 
 func http_post(path: String = "", dict_message: Dictionary = {}, download_file: String = "") -> HTTPObject:
 	var http := create_http()
 	http.download_file = download_file
-	var req_err := http.request(
+	http.safe_request(
 		get_url() + path,
 		get_json_headers(),
 		true,
 		HTTPClient.METHOD_POST,
 		JSON.print(dict_message)
 		)
-	if req_err != OK:
-		printerr("Error while trying to POST, code %d." % req_err)
-		http.emit_signal_http_request_completed_error(req_err)
 	return http
 
 
