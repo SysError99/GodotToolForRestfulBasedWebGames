@@ -97,6 +97,18 @@ var access_token_loaded := false
 var version_checked := false
 
 
+func parse_path(path: String) -> String:
+	if not ("://" in path):
+		if window:
+			if path[0] == "/":
+				return window.location.protocol + "//" + window.location.hostname + path
+			else:
+				return window.location.href.split("?")[0] + "/" + path
+		else:
+			return "http://127.0.0.1:8080/" + path
+	return path
+
+
 func clear_all_pck() -> void:
 	var dir := Directory.new()
 	if dir.open("user://") != OK:
@@ -123,6 +135,7 @@ func clear_pck(list: Array) -> void:
 		if dir.file_exists(path):
 			dir.remove(path)
 			print("Removed old PCK file: %s" % e)
+
 
 func convert_to_pck_path(string: String) -> String:
 	string = string.substr(0, string.find("?"))
@@ -161,6 +174,7 @@ func get_json_headers() -> PoolStringArray:
 
 func http_auth_get(path: String = "", download_file: String = "") -> HTTPObject:
 	var http := create_http()
+	path = parse_path(path)
 	http.download_file = download_file
 	http.safe_request(
 		path,
@@ -174,6 +188,7 @@ func http_auth_get(path: String = "", download_file: String = "") -> HTTPObject:
 
 func http_auth_post(path: String = "", dict_message: Dictionary = {}, download_file: String = "") -> HTTPObject:
 	var http := create_http()
+	path = parse_path(path)
 	http.download_file = download_file
 	http.safe_request(
 		path,
@@ -187,6 +202,7 @@ func http_auth_post(path: String = "", dict_message: Dictionary = {}, download_f
 
 func http_get(path: String = "", download_file: String = "") -> HTTPObject:
 	var http := create_http()
+	path = parse_path(path)
 	http.download_file = download_file
 	http.safe_request(
 		path,
@@ -200,6 +216,7 @@ func http_get(path: String = "", download_file: String = "") -> HTTPObject:
 
 func http_get_pck(path: String, replace = false) -> HTTPObject:
 	var http := create_http()
+	path = parse_path(path)
 	var req_params := [
 		path + "?r=%d" % randi(),
 		get_headers(),
@@ -207,6 +224,7 @@ func http_get_pck(path: String, replace = false) -> HTTPObject:
 		HTTPClient.METHOD_GET,
 		"",
 	]
+	print(req_params[0])
 	http.download_file = convert_to_pck_path(path)
 	http.import_pck_req_params = req_params
 	http.import_pck_path = path
@@ -227,6 +245,7 @@ func http_get_pck(path: String, replace = false) -> HTTPObject:
 
 func http_post(path: String = "", dict_message: Dictionary = {}, download_file: String = "") -> HTTPObject:
 	var http := create_http()
+	path = parse_path(path)
 	http.download_file = download_file
 	http.safe_request(
 		path,
