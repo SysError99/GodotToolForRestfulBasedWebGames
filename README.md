@@ -1,6 +1,9 @@
 # Godot Tool For RESTful-Based Web Games
 GDScript and Node.JS-based automation tool I made to ease building process of RESTful API HTML5 games made with Godot.
 
+# NOTICE
+There are breaking changes in current version. If you are looking for previous version, visit [this branch](/SysError99/GodotToolForRestfulBasedWebGames/tree/v0).
+
 ---
 ## Why making this?
 Godot is never meant to be run on HTML5 platform but Godot team managed to port them into it with surprisingly good results. However, the engine still has combinations of super large files (mainly the engine itself and a PCK file), and loading single large PCK file at startup is painfully slow, even with decent internet connection. 

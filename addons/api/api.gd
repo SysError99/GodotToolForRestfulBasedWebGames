@@ -22,7 +22,7 @@ class HTTPObject extends HTTPRequest:
 		api = parent
 		if connect("request_completed", self, "_request_completed") != OK:
 			printerr("Cannot connect a signal of HTTPObject!")
-	
+
 
 	func safe_request(url: String, custom_headers: PoolStringArray = PoolStringArray(), ssl_validation_domain: bool = true, method: int = 0, request_data: String = "") -> void:
 		if not is_inside_tree():
@@ -89,7 +89,6 @@ const ACCESS_TOKEN_PATH = "user://access_token"
 const CURRENT_VERSION_PATH = "user://current_version"
 
 
-var custom_host_url := ""
 var imported_pcks := []
 var window := JavaScript.get_interface("window")
 
@@ -112,7 +111,7 @@ func clear_all_pck() -> void:
 		if file.begins_with("."):
 			continue
 		if ".pck" in file:
-			var path := "user://" + file 
+			var path := "user://" + file
 			dir.remove(path)
 			print("Removed PCK:: %s" % path)
 	dir.list_dir_end()
@@ -161,30 +160,11 @@ func get_json_headers() -> PoolStringArray:
 	])
 
 
-func get_url() -> String:
-	if custom_host_url != "":
-		var url := custom_host_url
-		custom_host_url = ""
-		return url
-	if is_instance_valid(window):
-		if is_instance_valid(window.location):
-			if USE_ROOT_URL:
-				return window.location.protocol + "//" + window.location.host + "/"
-			else:
-				return window.location.href + "/"
-	return "http://localhost:8788/"
-
-
-func host(url: String) -> ApiNode:
-	custom_host_url = url
-	return self
-
-
 func http_auth_get(path: String = "", download_file: String = "") -> HTTPObject:
 	var http := create_http()
 	http.download_file = download_file
 	http.safe_request(
-		get_url() + path,
+		path,
 		get_auth_headers(),
 		true,
 		HTTPClient.METHOD_GET,
@@ -197,7 +177,7 @@ func http_auth_post(path: String = "", dict_message: Dictionary = {}, download_f
 	var http := create_http()
 	http.download_file = download_file
 	http.safe_request(
-		get_url() + path,
+		path,
 		get_auth_json_headers(),
 		true,
 		HTTPClient.METHOD_POST,
@@ -210,7 +190,7 @@ func http_get(path: String = "", download_file: String = "") -> HTTPObject:
 	var http := create_http()
 	http.download_file = download_file
 	http.safe_request(
-		get_url() + path,
+		path,
 		get_headers(),
 		true,
 		HTTPClient.METHOD_GET,
@@ -222,7 +202,7 @@ func http_get(path: String = "", download_file: String = "") -> HTTPObject:
 func http_get_pck(path: String, replace = false) -> HTTPObject:
 	var http := create_http()
 	var req_params := [
-		get_url() + path + "?r=%d" % randi(),
+		path + "?r=%d" % randi(),
 		get_headers(),
 		true,
 		HTTPClient.METHOD_GET,
@@ -250,7 +230,7 @@ func http_post(path: String = "", dict_message: Dictionary = {}, download_file: 
 	var http := create_http()
 	http.download_file = download_file
 	http.safe_request(
-		get_url() + path,
+		path,
 		get_json_headers(),
 		true,
 		HTTPClient.METHOD_POST,
@@ -305,7 +285,7 @@ func version_check() -> void:
 	if !".html" in version_file_url_splitted[version_file_url_splitted.size() - 1]:
 		version_file_url += "index.html"
 	version_file_url += ".ver.txt?r=%d" % randi()
-	var http := host(version_file_url).http_get()
+	var http := http_get(version_file_url)
 	var status_code := yield(http, "completed_status_code") as int
 	var content_type := yield(http, "completed_content_type") as String
 	var body = yield(http, "completed")
