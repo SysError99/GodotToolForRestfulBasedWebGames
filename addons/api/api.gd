@@ -9,7 +9,6 @@ class HTTPObject extends HTTPRequest:
 	signal completed(body)
 	signal completed_content_type(type)
 	signal completed_status_code(status_code)
-	signal get_pck_again(path)
 
 
 	var api: ApiNode
