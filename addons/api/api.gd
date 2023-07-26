@@ -103,7 +103,7 @@ func parse_path(path: String) -> String:
 			if path[0] == "/":
 				return window.location.protocol + "//" + window.location.hostname + path
 			else:
-				return window.location.protocol + "//" + window.location.hostname + window.location.pathname + "/" + path
+				return window.location.protocol + "//" + window.location.hostname + window.location.pathname + path
 		else:
 			return "http://127.0.0.1:8080/" + path
 	return path
