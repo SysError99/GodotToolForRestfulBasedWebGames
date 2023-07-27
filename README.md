@@ -199,7 +199,7 @@ Create an empty HTTP headers.
 Create an HTTP header that has `content-type: json`.
 
 #### `Api.get_url(): String`
-Get hostname URL from browser. If it's not running on HTML5 platform, it will fallback to `http://localhost:8788`.
+Get hostname URL from browser. If it's not running on HTML5 platform, it will fallback to `http://localhost:8080`.
 
 #### `Api.load_access_token()`
 Load access token from storage and store it in this function. Can be accessed with `Api.access_token`. If you want to know if the function loads the access token but also wanted to know if it actually exists or not, you can check with `Api.access_token_loaded` in loop:
