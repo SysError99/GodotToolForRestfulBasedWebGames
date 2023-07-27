@@ -150,10 +150,6 @@ Clear all PCKs downloaded (perform automatically by default when the game get up
 #### `Api.clear_pck(url: Array<String>): void`
 Specify an array of URL list of PCKs to be removed from the device.
 
-
-#### `Api.host(url: String): Api`
-Specify host URL instead of using default one from current URL.
-
 #### `Api.http_auth_get(url: String = "", download_file: String = ""): HTTPObject`
 Make an HTTP GET request with `access-token` attached. If you specify `download_file` with non-empty parameter, it will also download any of results into path specified with it. You can `yield()` each parameters in this format (cannot change order):
 ```gdscript
