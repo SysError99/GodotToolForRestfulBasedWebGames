@@ -137,7 +137,7 @@ If you upload PCK files at different hosting server, you need to change hostname
 In GDScript file provided in this repository has many of functions that making API calling stuffs in GDScript much easier. Assuming you imported `api.gd` as `Api` in AutoLoad (Singleton).
 
 #### `Api.version_checked: bool`
-Check if game versions is checked by this addon. Very useful if you wanted to make sure if game version is check before attempitng to download PCK files.
+Check if game versions is checked by this addon. Very useful if you wanted to make sure if game version is checked before attempitng to download PCK files.
 
 ```gdscript
 while not Api.version_checked:
