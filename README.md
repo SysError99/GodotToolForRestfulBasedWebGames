@@ -122,10 +122,9 @@ Still, if you aren't sure that if the PCK gets downloaded and imported properly,
 	get_tree().change_scene("res://pck_2022_12_12_patch/new_scene.tscn")
 ```
 
-If you upload PCK files at different hosting server, you need to change hostname to that location by using `Api.host()` function, chained with `http.get_pck()` as usual:
-
+If you upload PCK files at different hosting server, make sure that the CDN allows you to download the file (especially in CORS policy), then you can put full URL path:
 ```gdscript
-	var http := Api.host("http://cdn.of.new.site/").http_get_pck("pck/pck_2022_12_12_patch")
+	var http := Api.host("https://cdn.of.new.site/pck/pck_2022_12_12_patch.pck")
 	yield(http, "completed")
 	get_tree().change_scene("res://pck_2022_12_12_patch/new_scene.tscn")
 ```
