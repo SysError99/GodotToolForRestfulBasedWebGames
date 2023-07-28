@@ -6,6 +6,7 @@ const USE_ROOT_URL = true
 
 
 var http_count := 0
+var custom_url := ""
 
 
 class HTTPObject extends HTTPRequest:
@@ -106,6 +107,10 @@ var version_checked := false
 
 
 func parse_path(path: String) -> String:
+	if custom_url:
+		var url := custom_url
+		custom_url = ""
+		return url + path
 	if not ("://" in path):
 		if window:
 			if path[0] == "/":
@@ -115,6 +120,11 @@ func parse_path(path: String) -> String:
 		else:
 			return "http://127.0.0.1:8080/" + path
 	return path
+
+
+func host(url: String) -> ApiNode:
+	custom_url = url
+	return self
 
 
 func clear_all_pck() -> void:
