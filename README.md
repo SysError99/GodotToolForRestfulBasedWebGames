@@ -4,6 +4,8 @@ GDScript and Node.JS-based automation tool I made to ease building process of RE
 # NOTICE
 There are breaking changes in current version. If you are looking for previous version, visit [this branch](/SysError99/GodotToolForRestfulBasedWebGames/tree/v0).
 
+On this version, `host` has been removed, since all HTTP functions now are able to parse URLs automatically. The function solely exists another for backwards compatibility. If you don't want to break anything, the branch above will work. But since it's small change, you can also do some refactoring and get it working in this version (plus it looks nicer).
+
 ---
 ## Why making this?
 Godot is never meant to be run on HTML5 platform but Godot team managed to port them into it with surprisingly good results. However, the engine still has combinations of super large files (mainly the engine itself and a PCK file), and loading single large PCK file at startup is painfully slow, even with decent internet connection. 
