@@ -5,6 +5,9 @@ class_name ApiNode
 const USE_ROOT_URL = true
 
 
+var http_count := 0
+
+
 class HTTPObject extends HTTPRequest:
 	signal completed(body)
 	signal completed_content_type(type)
@@ -21,6 +24,12 @@ class HTTPObject extends HTTPRequest:
 		api = parent
 		if connect("request_completed", self, "_request_completed") != OK:
 			printerr("Cannot connect a signal of HTTPObject!")
+		if connect("completed", self, "_completed_queue_free") != OK:
+			printerr("Cannot connect a signal to queuefree itself.")
+	
+	
+	func _completed_queue_free(_body) -> void:
+		queue_free()
 
 
 	func safe_request(url: String, custom_headers: PoolStringArray = PoolStringArray(), ssl_validation_domain: bool = true, method: int = 0, request_data: String = "") -> void:
@@ -58,7 +67,6 @@ class HTTPObject extends HTTPRequest:
 			else:
 				printerr("PCK download of %s failed, target returns %d." % [import_pck_path, status_code])
 				api.clear_pck([ import_pck_path ])
-		queue_free()
 		if result != OK:
 			emit_signal("completed_status_code", -result)
 			emit_signal("completed_content_type", "text")
@@ -144,6 +152,8 @@ func convert_to_pck_path(string: String) -> String:
 
 func create_http() -> HTTPObject:
 	var http := HTTPObject.new(self)
+	http.name = "_%d" % http_count
+	http_count += 1
 	add_child(http)
 	return http
 
@@ -224,19 +234,18 @@ func http_get_pck(path: String, replace = false) -> HTTPObject:
 		HTTPClient.METHOD_GET,
 		"",
 	]
-	print(req_params[0])
 	http.download_file = convert_to_pck_path(path)
 	http.import_pck_req_params = req_params
 	http.import_pck_path = path
 	http.import_pck = true
 	if http.download_file in imported_pcks:
-		printerr("PCK already gets imported, if PCK replace is intended, the game should restart.")
+		print("PCK %s lready gets imported, if PCK-replace is intended, the game should restart." % path)
 		http.emit_signal_http_request_completed()
 		return http
 	if !replace:
 		var dir := Directory.new()
 		if dir.file_exists(http.download_file):
-			printerr("File %s already exists, trying to import..." % path)
+			print("File %s already exists, trying to import..." % path)
 			http.emit_signal_http_request_completed()
 			return http
 	http.callv("safe_request", req_params)
