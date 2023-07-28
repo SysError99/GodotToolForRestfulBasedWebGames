@@ -5,6 +5,9 @@ class_name ApiNode
 const USE_ROOT_URL = true
 
 
+var http_count := 0
+
+
 class HTTPObject extends HTTPRequest:
 	signal completed(body)
 	signal completed_content_type(type)
@@ -21,7 +24,13 @@ class HTTPObject extends HTTPRequest:
 		api = parent
 		if connect("request_completed", self, "_request_completed") != OK:
 			printerr("Cannot connect a signal of HTTPObject!")
+		if connect("completed", self, "_completed_queue_free") != OK:
+			printerr("Cannot connect a signal to queuefree itself.")
 	
+	
+	func _completed_queue_free(_body) -> void:
+		queue_free()
+
 
 	func safe_request(url: String, custom_headers: PoolStringArray = PoolStringArray(), ssl_validation_domain: bool = true, method: int = 0, request_data: String = "") -> void:
 		if not is_inside_tree():
@@ -58,7 +67,6 @@ class HTTPObject extends HTTPRequest:
 			else:
 				printerr("PCK download of %s failed, target returns %d." % [import_pck_path, status_code])
 				api.clear_pck([ import_pck_path ])
-		queue_free()
 		if result != OK:
 			emit_signal("completed_status_code", -result)
 			emit_signal("completed_content_type", "text")
@@ -88,7 +96,6 @@ const ACCESS_TOKEN_PATH = "user://access_token"
 const CURRENT_VERSION_PATH = "user://current_version"
 
 
-var custom_host_url := ""
 var imported_pcks := []
 var window := JavaScript.get_interface("window")
 
@@ -96,6 +103,18 @@ var window := JavaScript.get_interface("window")
 var access_token := ""
 var access_token_loaded := false
 var version_checked := false
+
+
+func parse_path(path: String) -> String:
+	if not ("://" in path):
+		if window:
+			if path[0] == "/":
+				return window.location.protocol + "//" + window.location.hostname + path
+			else:
+				return window.location.protocol + "//" + window.location.hostname + window.location.pathname + path
+		else:
+			return "http://127.0.0.1:8080/" + path
+	return path
 
 
 func clear_all_pck() -> void:
@@ -111,7 +130,7 @@ func clear_all_pck() -> void:
 		if file.begins_with("."):
 			continue
 		if ".pck" in file:
-			var path := "user://" + file 
+			var path := "user://" + file
 			dir.remove(path)
 			print("Removed PCK:: %s" % path)
 	dir.list_dir_end()
@@ -125,6 +144,7 @@ func clear_pck(list: Array) -> void:
 			dir.remove(path)
 			print("Removed old PCK file: %s" % e)
 
+
 func convert_to_pck_path(string: String) -> String:
 	string = string.substr(0, string.find("?"))
 	return "user://" + Marshalls.variant_to_base64(string).replace("/", "-").replace("=", "_") + ".pck"
@@ -132,6 +152,8 @@ func convert_to_pck_path(string: String) -> String:
 
 func create_http() -> HTTPObject:
 	var http := HTTPObject.new(self)
+	http.name = "_%d" % http_count
+	http_count += 1
 	add_child(http)
 	return http
 
@@ -160,30 +182,12 @@ func get_json_headers() -> PoolStringArray:
 	])
 
 
-func get_url() -> String:
-	if custom_host_url != "":
-		var url := custom_host_url
-		custom_host_url = ""
-		return url
-	if is_instance_valid(window):
-		if is_instance_valid(window.location):
-			if USE_ROOT_URL:
-				return window.location.protocol + "//" + window.location.host + "/"
-			else:
-				return window.location.href + "/"
-	return "http://localhost:8788/"
-
-
-func host(url: String) -> ApiNode:
-	custom_host_url = url
-	return self
-
-
 func http_auth_get(path: String = "", download_file: String = "") -> HTTPObject:
 	var http := create_http()
+	path = parse_path(path)
 	http.download_file = download_file
 	http.safe_request(
-		get_url() + path,
+		path,
 		get_auth_headers(),
 		true,
 		HTTPClient.METHOD_GET,
@@ -194,9 +198,10 @@ func http_auth_get(path: String = "", download_file: String = "") -> HTTPObject:
 
 func http_auth_post(path: String = "", dict_message: Dictionary = {}, download_file: String = "") -> HTTPObject:
 	var http := create_http()
+	path = parse_path(path)
 	http.download_file = download_file
 	http.safe_request(
-		get_url() + path,
+		path,
 		get_auth_json_headers(),
 		true,
 		HTTPClient.METHOD_POST,
@@ -207,9 +212,10 @@ func http_auth_post(path: String = "", dict_message: Dictionary = {}, download_f
 
 func http_get(path: String = "", download_file: String = "") -> HTTPObject:
 	var http := create_http()
+	path = parse_path(path)
 	http.download_file = download_file
 	http.safe_request(
-		get_url() + path,
+		path,
 		get_headers(),
 		true,
 		HTTPClient.METHOD_GET,
@@ -220,8 +226,9 @@ func http_get(path: String = "", download_file: String = "") -> HTTPObject:
 
 func http_get_pck(path: String, replace = false) -> HTTPObject:
 	var http := create_http()
+	path = parse_path(path)
 	var req_params := [
-		get_url() + path + "?r=%d" % randi(),
+		path + "?r=%d" % randi(),
 		get_headers(),
 		true,
 		HTTPClient.METHOD_GET,
@@ -232,13 +239,13 @@ func http_get_pck(path: String, replace = false) -> HTTPObject:
 	http.import_pck_path = path
 	http.import_pck = true
 	if http.download_file in imported_pcks:
-		printerr("PCK already gets imported, if PCK replace is intended, the game should restart.")
+		print("PCK %s lready gets imported, if PCK-replace is intended, the game should restart." % path)
 		http.emit_signal_http_request_completed()
 		return http
 	if !replace:
 		var dir := Directory.new()
 		if dir.file_exists(http.download_file):
-			printerr("File %s already exists, trying to import..." % path)
+			print("File %s already exists, trying to import..." % path)
 			http.emit_signal_http_request_completed()
 			return http
 	http.callv("safe_request", req_params)
@@ -247,9 +254,10 @@ func http_get_pck(path: String, replace = false) -> HTTPObject:
 
 func http_post(path: String = "", dict_message: Dictionary = {}, download_file: String = "") -> HTTPObject:
 	var http := create_http()
+	path = parse_path(path)
 	http.download_file = download_file
 	http.safe_request(
-		get_url() + path,
+		path,
 		get_json_headers(),
 		true,
 		HTTPClient.METHOD_POST,
@@ -304,7 +312,7 @@ func version_check() -> void:
 	if !".html" in version_file_url_splitted[version_file_url_splitted.size() - 1]:
 		version_file_url += "index.html"
 	version_file_url += ".ver.txt?r=%d" % randi()
-	var http := host(version_file_url).http_get()
+	var http := http_get(version_file_url)
 	var status_code := yield(http, "completed_status_code") as int
 	var content_type := yield(http, "completed_content_type") as String
 	var body = yield(http, "completed")

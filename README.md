@@ -147,10 +147,6 @@ Clear all PCKs downloaded (perform automatically by default when the game get up
 #### `Api.clear_pck(url: Array<String>): void`
 Specify an array of URL list of PCKs to be removed from the device.
 
-
-#### `Api.host(url: String): Api`
-Specify host URL instead of using default one from current URL.
-
 #### `Api.http_auth_get(url: String = "", download_file: String = ""): HTTPObject`
 Make an HTTP GET request with `access-token` attached. If you specify `download_file` with non-empty parameter, it will also download any of results into path specified with it. You can `yield()` each parameters in this format (cannot change order):
 ```gdscript
@@ -200,7 +196,7 @@ Create an empty HTTP headers.
 Create an HTTP header that has `content-type: json`.
 
 #### `Api.get_url(): String`
-Get hostname URL from browser. If it's not running on HTML5 platform, it will fallback to `http://localhost:8788`.
+Get hostname URL from browser. If it's not running on HTML5 platform, it will fallback to `http://localhost:8080`.
 
 #### `Api.load_access_token()`
 Load access token from storage and store it in this function. Can be accessed with `Api.access_token`. If you want to know if the function loads the access token but also wanted to know if it actually exists or not, you can check with `Api.access_token_loaded` in loop:
