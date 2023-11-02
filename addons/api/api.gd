@@ -98,6 +98,7 @@ const CURRENT_VERSION_PATH = "user://current_version"
 
 var imported_pcks := []
 var window := JavaScript.get_interface("window")
+var location := JavaScript.get_interface("location")
 
 
 var access_token := ""
@@ -107,11 +108,11 @@ var version_checked := false
 
 func parse_path(path: String) -> String:
 	if not ("://" in path):
-		if window:
+		if location:
 			if path[0] == "/":
-				return window.location.protocol + "//" + window.location.hostname + path
+				return location.protocol + "//" + location.hostname + path
 			else:
-				return window.location.protocol + "//" + window.location.hostname + window.location.pathname + path
+				return location.protocol + "//" + location.hostname + location.pathname + path
 		else:
 			return "http://127.0.0.1:8080/" + path
 	return path
@@ -303,11 +304,11 @@ func _ready() -> void:
 func version_check() -> void:
 	var file := File.new()
 	var dir := Directory.new()
-	if !is_instance_valid(window):
-		printerr("Cannot get valid 'window' interface, cannot proceed version check.")
+	if not is_instance_valid(window) || not is_instance_valid(location):
+		printerr("Cannot get valid 'window' or 'location' interface, cannot proceed version check.")
 		version_checked = true
 		return
-	var version_file_url := window.location.href as String
+	var version_file_url := location.href.split("?")[0] as String
 	var version_file_url_splitted := version_file_url.split("/")
 	if !".html" in version_file_url_splitted[version_file_url_splitted.size() - 1]:
 		version_file_url += "index.html"
@@ -317,7 +318,7 @@ func version_check() -> void:
 	var content_type := yield(http, "completed_content_type") as String
 	var body = yield(http, "completed")
 	if status_code != 200 || content_type != "text":
-		printerr("%s returns %d (%s), cannnot proceed version check" % [window.location.href, status_code, content_type])
+		printerr("%s returns %d (%s), cannnot proceed version check" % [location.href, status_code, content_type])
 		version_checked = true
 		return
 	var version := body as String
@@ -339,10 +340,10 @@ func version_check() -> void:
 		return
 	version_control_behaviour()
 	dir.remove(CURRENT_VERSION_PATH)
-	yield(get_tree().create_timer(1), "timeout")
 	print("Version isn't up to date, trying to refresh.")
-	JavaScript.eval("alert('There is newer version, app will reload.');")
-	JavaScript.eval("window.location.href = window.location.href;")
+	window.alert("There is newer version, app will reload!")
+	yield(get_tree().create_timer(1), "timeout")
+	location.href = location.href
 
 
 func version_check_loop() -> void:
