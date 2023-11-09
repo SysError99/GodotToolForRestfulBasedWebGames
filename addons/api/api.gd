@@ -93,6 +93,7 @@ class HTTPObject extends HTTPRequest:
 
 
 const ACCESS_TOKEN_PATH = "user://access_token"
+const ACCESS_TOKEN_KEYWORD = "gdtrbwg_access_token"
 const CURRENT_VERSION_KEYWORD = "gdtrbwg_current_version"
 
 
@@ -272,26 +273,14 @@ func http_post(path: String = "", dict_message: Dictionary = {}, download_file: 
 
 
 func load_access_token() -> void:
-	var dir := Directory.new()
-	if dir.file_exists(ACCESS_TOKEN_PATH):
-		var file := File.new()
-		if file.open(ACCESS_TOKEN_PATH, File.READ) != OK:
-			printerr("Cannot open access token!")
-			return
-		access_token = file.get_as_text()
-		file.close()
-		print("Access token loaded.")
+	var token = local_storage.getItem(ACCESS_TOKEN_KEYWORD)
 	access_token_loaded = true
+	if token is String:
+		access_token = token 
 
 
 func save_access_token() -> void:
-	var file = File.new()
-	if file.open(ACCESS_TOKEN_PATH, File.WRITE) != OK:
-		printerr("Canot open access token file to write!")
-		return
-	file.store_string(access_token)
-	file.close()
-	print("Access token saved.")
+	local_storage.setItem(ACCESS_TOKEN_KEYWORD, access_token)
 
 
 func set_access_token(value: String) -> void:
