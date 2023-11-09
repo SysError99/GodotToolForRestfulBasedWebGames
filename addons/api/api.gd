@@ -26,8 +26,8 @@ class HTTPObject extends HTTPRequest:
 			printerr("Cannot connect a signal of HTTPObject!")
 		if connect("completed", self, "_completed_queue_free") != OK:
 			printerr("Cannot connect a signal to queuefree itself.")
-	
-	
+
+
 	func _completed_queue_free(_body) -> void:
 		queue_free()
 
@@ -93,17 +93,21 @@ class HTTPObject extends HTTPRequest:
 
 
 const ACCESS_TOKEN_PATH = "user://access_token"
-const CURRENT_VERSION_PATH = "user://current_version"
+const CURRENT_VERSION_KEYWORD = "gdtrbwg_current_version"
 
 
 var imported_pcks := []
 var window := JavaScript.get_interface("window")
 var location := JavaScript.get_interface("location")
+var local_storage := JavaScript.get_interface("localStorage")
 
 
 var access_token := ""
 var access_token_loaded := false
 var version_checked := false
+
+
+var version_control_function: FuncRef
 
 
 func parse_path(path: String) -> String:
@@ -302,10 +306,8 @@ func _ready() -> void:
 
 
 func version_check() -> void:
-	var file := File.new()
-	var dir := Directory.new()
-	if not is_instance_valid(window) || not is_instance_valid(location):
-		printerr("Cannot get valid 'window' or 'location' interface, cannot proceed version check.")
+	if not is_instance_valid(window) || not is_instance_valid(location) || not is_instance_valid(local_storage):
+		printerr("Cannot get valid 'window' or 'location' or 'localStorage' interface, cannot proceed version check.")
 		version_checked = true
 		return
 	var version_file_url := location.href.split("?")[0] as String
@@ -316,34 +318,26 @@ func version_check() -> void:
 	var http := http_get(version_file_url)
 	var status_code := yield(http, "completed_status_code") as int
 	var content_type := yield(http, "completed_content_type") as String
-	var body = yield(http, "completed")
-	if status_code != 200 || content_type != "text":
-		printerr("%s returns %d (%s), cannnot proceed version check" % [location.href, status_code, content_type])
-		version_checked = true
+	var version = yield(http, "completed")
+	if status_code != 200 or content_type != "text":
+		printerr("%s returns %d (%s), cannnot proceed version check" % [version_file_url, status_code, content_type])
 		return
-	var version := body as String
-	if !dir.file_exists(CURRENT_VERSION_PATH):
-		version_control_behaviour()
-		print("Generating version indicator...")
-		file.open(CURRENT_VERSION_PATH, File.WRITE)
-		file.store_string(version)
-		file.close()
-		version_checked = true
-		return
-	file.open(CURRENT_VERSION_PATH, File.READ_WRITE)
-	var current_version := file.get_as_text()
-	file.store_string(version)
-	file.close()
+	var current_version = local_storage.getItem(CURRENT_VERSION_KEYWORD)
+	local_storage.setItem(CURRENT_VERSION_KEYWORD, version)
+	version_checked = true
+	if not current_version:
+		# Legacy migration
+		var dir := Directory.new()
+		if dir.file_exists("user://current_version"):
+			print("Old version control detected, migrating...")
+			dir.remove("user://current_version")
+		else:
+			print("First time launch, will not trigger anything.")
+			return
 	if current_version == version:
-		print("Version is up to date!")
-		version_checked = true
+		print("The game is up to date!")
 		return
 	version_control_behaviour()
-	dir.remove(CURRENT_VERSION_PATH)
-	print("Version isn't up to date, trying to refresh.")
-	window.alert("There is newer version, app will reload!")
-	yield(get_tree().create_timer(1), "timeout")
-	location.href = location.href
 
 
 func version_check_loop() -> void:
@@ -353,4 +347,10 @@ func version_check_loop() -> void:
 
 
 func version_control_behaviour() -> void:
+	if version_control_function:
+		version_control_function.call_func()
+		return
 	clear_all_pck()
+	window.alert("There is newer version, app will reload!")
+	yield(get_tree().create_timer(1), "timeout")
+	location.href = location.href
