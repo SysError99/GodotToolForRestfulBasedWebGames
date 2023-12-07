@@ -111,6 +111,30 @@ var version_checked := false
 var version_control_function: FuncRef
 
 
+func get_item(key: String):
+	key = "_LS" + key.sha256_text()
+	if not local_storage:
+		var file := File.new()
+		if not file.file_exists(key):
+			return null
+		file.open(key, File.READ)
+		var data = JSON.parse(file.get_as_text()).result
+		file.close()
+		return data
+	return local_storage.getItem(key)
+
+
+func set_item(key: String, data) -> void:
+	key = "_LS" + key.sha256_text()
+	if not local_storage:
+		var file := File.new()
+		file.open(key, File.WRITE)
+		file.store_string(JSON.print(data))
+		file.close()
+		return
+	local_storage.setItem(key, data)
+
+
 func parse_path(path: String) -> String:
 	if not ("://" in path):
 		if location:
@@ -273,14 +297,14 @@ func http_post(path: String = "", dict_message: Dictionary = {}, download_file: 
 
 
 func load_access_token() -> void:
-	var token = local_storage.getItem(ACCESS_TOKEN_KEYWORD)
+	var token = get_item(ACCESS_TOKEN_KEYWORD)
 	access_token_loaded = true
 	if token is String:
 		access_token = token 
 
 
 func save_access_token() -> void:
-	local_storage.setItem(ACCESS_TOKEN_KEYWORD, access_token)
+	set_item(ACCESS_TOKEN_KEYWORD, access_token)
 
 
 func set_access_token(value: String) -> void:
@@ -311,8 +335,8 @@ func version_check() -> void:
 	if status_code != 200 or content_type != "text":
 		printerr("%s returns %d (%s), cannnot proceed version check" % [version_file_url, status_code, content_type])
 		return
-	var current_version = local_storage.getItem(CURRENT_VERSION_KEYWORD)
-	local_storage.setItem(CURRENT_VERSION_KEYWORD, version)
+	var current_version = get_item(CURRENT_VERSION_KEYWORD)
+	set_item(CURRENT_VERSION_KEYWORD, version)
 	version_checked = true
 	if not current_version:
 		# Legacy migration
