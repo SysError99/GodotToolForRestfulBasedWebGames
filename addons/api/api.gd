@@ -105,6 +105,7 @@ var local_storage := JavaScript.get_interface("localStorage")
 
 var access_token := ""
 var access_token_loaded := false
+var http_headers := []
 var version_checked := false
 
 
@@ -189,27 +190,42 @@ func create_http() -> HTTPObject:
 
 
 func get_auth_headers() -> PoolStringArray:
-	return PoolStringArray([
+	return PoolStringArray(http_headers_get() + [
 		"access-token: " + access_token,
 	])
 
 
 func get_auth_json_headers() -> PoolStringArray:
-	return PoolStringArray([
+	return PoolStringArray(http_headers_get() + [
 		"access-token: " + access_token,
 		"Content-Type: applicaiton/json",
 	])
 
 
 func get_headers() -> PoolStringArray:
-	return PoolStringArray([
-	])
+	return PoolStringArray(http_headers_get())
 
 
 func get_json_headers() -> PoolStringArray:
-	return PoolStringArray([
+	return PoolStringArray(http_headers_get() + [
 		"Content-Type: application/json",
 	])
+
+
+func http_headers_add(headers: Array) -> ApiNode:
+	http_headers += headers
+	return self
+
+
+func http_headers_get() -> Array:
+	var headers := http_headers
+	http_headers = []
+	return headers
+
+
+func http_headers_set(headers: Array) -> ApiNode:
+	http_headers = headers
+	return self
 
 
 func http_auth_get(path: String = "", download_file: String = "") -> HTTPObject:

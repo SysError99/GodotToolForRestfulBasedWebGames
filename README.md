@@ -163,6 +163,12 @@ Make an HTTP GET request with `access-token` attached. If you specify `download_
 #### `Api.http_auth_post(url: String = "", data: Dictionary = {}, download_file: String = ""): HTTPObject`
 Make an HTTP POST request with `access-token` attached. If you specify `download_file` with non-empty parameter, it will also download any of results into path specified with it.
 
+#### `Api.http_headers_add(headers: Array) -> ApiNode`
+Add HTTP headers for the next request.
+
+#### `Api.http_headers_set(headers: Array) -> ApiNode`
+Set HTTP headers for the next request.
+
 #### `Api.http_get(url: String = "", download_file: String = ""): HTTPObject`
 Make an HTTP GET request. If you specify `download_file` with non-empty parameter, it will also download any of results into path specified with it.
 
