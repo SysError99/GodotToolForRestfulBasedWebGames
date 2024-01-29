@@ -3,6 +3,7 @@ class_name ApiNode
 
 
 const USE_ROOT_URL = true
+const ALPHABETS = "abcdefghijklmnopqrstuvwxyz"
 
 
 var http_count := 0
@@ -64,6 +65,8 @@ class HTTPObject extends HTTPRequest:
 					printerr("Cannot import resource pack of path '%s', trying to redownload..." % import_pck_path)
 					return
 				api.imported_pcks.push_back(download_file)
+				api._add_to_downloaded_pcks(download_file)
+				print("Downloaded PCK: %s" % import_pck_path)
 			else:
 				printerr("PCK download of %s failed, target returns %d." % [import_pck_path, status_code])
 				api.clear_pck([ import_pck_path ])
@@ -98,6 +101,7 @@ const CURRENT_VERSION_KEYWORD = "gdtrbwg_current_version"
 
 
 var imported_pcks := []
+var downloaded_pcks := {}
 var window := JavaScript.get_interface("window")
 var location := JavaScript.get_interface("location")
 var local_storage := JavaScript.get_interface("localStorage")
@@ -112,9 +116,18 @@ var version_checked := false
 var version_control_function: FuncRef
 
 
+func generate_word(length: int) -> String:
+	var word := ""
+	var n_char := len(ALPHABETS)
+	for _i in range(length):
+		word += ALPHABETS[randi()% n_char]
+	return word
+
+
 func get_item(key: String):
 	key = "_LS" + key.sha256_text()
 	if not local_storage:
+		key = "user://" + key
 		var file := File.new()
 		if not file.file_exists(key):
 			return null
@@ -122,18 +135,22 @@ func get_item(key: String):
 		var data = JSON.parse(file.get_as_text()).result
 		file.close()
 		return data
-	return local_storage.getItem(key)
+	var value = local_storage.getItem(key)
+	if value is String:
+		return JSON.parse(value).result
+	return value
 
 
 func set_item(key: String, data) -> void:
 	key = "_LS" + key.sha256_text()
 	if not local_storage:
+		key = "user://" + key
 		var file := File.new()
 		file.open(key, File.WRITE)
 		file.store_string(JSON.print(data))
 		file.close()
 		return
-	local_storage.setItem(key, data)
+	local_storage.setItem(key, JSON.print(data))
 
 
 func parse_path(path: String) -> String:
@@ -148,32 +165,32 @@ func parse_path(path: String) -> String:
 	return path
 
 
+func _get_downloaded_pcks() -> void:
+	var cached_pcks_uncast = get_item("downloaded_pcks")
+	if cached_pcks_uncast is Dictionary:
+		downloaded_pcks = cached_pcks_uncast
+
+
+func _set_downloaded_pcks() -> void:
+	set_item("downloaded_pcks", downloaded_pcks)
+
+
+func _add_to_downloaded_pcks(path: String) -> void:
+	downloaded_pcks[path] = 0
+	_set_downloaded_pcks()
+
+
 func clear_all_pck() -> void:
-	var dir := Directory.new()
-	if dir.open("user://") != OK:
-		printerr("Cannot open user folder when trying to clean up all PCKs!")
-		return
-	dir.list_dir_begin(true, true)
-	while true:
-		var file := dir.get_next()
-		if file == "":
-			break
-		if file.begins_with("."):
-			continue
-		if ".pck" in file:
-			var path := "user://" + file
-			dir.remove(path)
-			print("Removed PCK:: %s" % path)
-	dir.list_dir_end()
+	downloaded_pcks = {}
+	_set_downloaded_pcks()
 
 
 func clear_pck(list: Array) -> void:
-	var dir := Directory.new()
 	for e in list:
 		var path := convert_to_pck_path(e)
-		if dir.file_exists(path):
-			dir.remove(path)
-			print("Removed old PCK file: %s" % e)
+		downloaded_pcks.erase(path)
+		print("Removed old PCK file: %s" % e)
+	_set_downloaded_pcks()
 
 
 func convert_to_pck_path(string: String) -> String:
@@ -274,7 +291,7 @@ func http_get_pck(path: String, replace = false) -> HTTPObject:
 	var http := create_http()
 	path = parse_path(path)
 	var req_params := [
-		path + "?r=%d" % randi(),
+		path + "?%s=%d" % [generate_word(randi() % 16), randi()],
 		get_headers(),
 		true,
 		HTTPClient.METHOD_GET,
@@ -289,8 +306,7 @@ func http_get_pck(path: String, replace = false) -> HTTPObject:
 		http.emit_signal_http_request_completed()
 		return http
 	if !replace:
-		var dir := Directory.new()
-		if dir.file_exists(http.download_file):
+		if http.download_file in downloaded_pcks:
 			print("File %s already exists, trying to import..." % path)
 			http.emit_signal_http_request_completed()
 			return http
@@ -330,27 +346,28 @@ func set_access_token(value: String) -> void:
 
 func _ready() -> void:
 	randomize()
+	_get_downloaded_pcks()
 	load_access_token()
 	version_check_loop()
 
 
 func version_check() -> void:
-	if not is_instance_valid(window) || not is_instance_valid(location) || not is_instance_valid(local_storage):
-		printerr("Cannot get valid 'window' or 'location' or 'localStorage' interface, cannot proceed version check.")
-		version_checked = true
-		return
-	var version_file_url := location.href.split("?")[0] as String
-	var version_file_url_splitted := version_file_url.split("/")
-	if !".html" in version_file_url_splitted[version_file_url_splitted.size() - 1]:
-		version_file_url += "index.html"
-	version_file_url += ".ver.txt?r=%d" % randi()
-	var http := http_get(version_file_url)
-	var status_code := yield(http, "completed_status_code") as int
-	var content_type := yield(http, "completed_content_type") as String
-	var version = yield(http, "completed")
-	if status_code != 200 or content_type != "text":
-		printerr("%s returns %d (%s), cannnot proceed version check" % [version_file_url, status_code, content_type])
-		return
+	var version := ""
+	if is_instance_valid(window) && is_instance_valid(location) && is_instance_valid(local_storage):
+		var version_file_url := location.href.split("?")[0] as String
+		var version_file_url_splitted := version_file_url.split("/")
+		if !".html" in version_file_url_splitted[version_file_url_splitted.size() - 1]:
+			version_file_url += "index.html"
+		version_file_url += ".ver.txt?r=%d" % randi()
+		var http := http_get(version_file_url)
+		var status_code := yield(http, "completed_status_code") as int
+		var content_type := yield(http, "completed_content_type") as String
+		if status_code != 200 or content_type != "text":
+			printerr("%s returns %d (%s), cannnot proceed version check" % [version_file_url, status_code, content_type])
+			return
+		version = yield(http, "completed")
+	else:
+		version = "%d" % int(Time.get_unix_time_from_system() * 1000)
 	var current_version = get_item(CURRENT_VERSION_KEYWORD)
 	set_item(CURRENT_VERSION_KEYWORD, version)
 	version_checked = true
@@ -376,10 +393,11 @@ func version_check_loop() -> void:
 
 
 func version_control_behaviour() -> void:
-	if version_control_function:
+	if is_instance_valid(version_control_function):
 		version_control_function.call_func()
 		return
 	clear_all_pck()
-	window.alert("There is newer version, app will reload!")
-	yield(get_tree().create_timer(1), "timeout")
-	location.href = location.href
+	if is_instance_valid(window) && is_instance_valid(location):
+		window.alert("There is a newer version, app will reload!")
+		yield(get_tree().create_timer(1), "timeout")
+		location.href = location.href
