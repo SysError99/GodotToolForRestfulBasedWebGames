@@ -59,7 +59,7 @@ class HTTPObject extends HTTPRequest:
 			if status_code == 200:
 				if !ProjectSettings.load_resource_pack(download_file):
 					var url := import_pck_req_params[0] as String
-					import_pck_req_params[0] = url.substr(0, url.find("?")) + ("?r=%d" % randi())
+					import_pck_req_params[0] = api.get_path_force_cache_bust(url.substr(0, url.find("?")))
 					api.clear_pck([ import_pck_path ])
 					callv("safe_request", import_pck_req_params)
 					printerr("Cannot import resource pack of path '%s', trying to redownload..." % import_pck_path)
@@ -120,8 +120,12 @@ func generate_word(length: int) -> String:
 	var word := ""
 	var n_char := len(ALPHABETS)
 	for _i in range(length):
-		word += ALPHABETS[randi()% n_char]
+		word += ALPHABETS[randi() % n_char]
 	return word
+
+
+func get_path_force_cache_bust(path: String) -> String:
+	return "%s?%s=%d" % [ path, generate_word(randi() % 16), generate_word(randi() % 16) ]
 
 
 func get_item(key: String):
@@ -291,7 +295,7 @@ func http_get_pck(path: String, replace = false) -> HTTPObject:
 	var http := create_http()
 	path = parse_path(path)
 	var req_params := [
-		path + "?%s=%d" % [generate_word(randi() % 16), randi()],
+		get_path_force_cache_bust(path),
 		get_headers(),
 		true,
 		HTTPClient.METHOD_GET,
@@ -358,8 +362,7 @@ func version_check() -> void:
 		var version_file_url_splitted := version_file_url.split("/")
 		if !".html" in version_file_url_splitted[version_file_url_splitted.size() - 1]:
 			version_file_url += "index.html"
-		version_file_url += ".ver.txt?r=%d" % randi()
-		var http := http_get(version_file_url)
+		var http := http_get(get_path_force_cache_bust(version_file_url))
 		var status_code := yield(http, "completed_status_code") as int
 		var content_type := yield(http, "completed_content_type") as String
 		if status_code != 200 or content_type != "text":
