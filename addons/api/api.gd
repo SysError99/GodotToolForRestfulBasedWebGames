@@ -116,16 +116,16 @@ var version_checked := false
 var version_control_function: FuncRef
 
 
+func get_path_force_cache_bust(path: String) -> String:
+	return "%s?%s=%d" % [ path, generate_word(randi() % 16), generate_word(randi() % 16) ]
+
+
 func generate_word(length: int) -> String:
 	var word := ""
 	var n_char := len(ALPHABETS)
 	for _i in range(length):
 		word += ALPHABETS[randi() % n_char]
 	return word
-
-
-func get_path_force_cache_bust(path: String) -> String:
-	return "%s?%s=%d" % [ path, generate_word(randi() % 16), generate_word(randi() % 16) ]
 
 
 func get_item(key: String):
@@ -362,6 +362,7 @@ func version_check() -> void:
 		var version_file_url_splitted := version_file_url.split("/")
 		if !".html" in version_file_url_splitted[version_file_url_splitted.size() - 1]:
 			version_file_url += "index.html"
+		version_file_url += ".ver.txt"
 		var http := http_get(get_path_force_cache_bust(version_file_url))
 		var status_code := yield(http, "completed_status_code") as int
 		var content_type := yield(http, "completed_content_type") as String
