@@ -117,7 +117,7 @@ var version_control_function: FuncRef
 
 
 func get_path_force_cache_bust(path: String) -> String:
-	return "%s?%s=%d" % [ path, generate_word(randi() % 16), generate_word(randi() % 16) ]
+	return "%s?%s=%s" % [ path, generate_word(randi() % 16), generate_word(randi() % 16) ]
 
 
 func generate_word(length: int) -> String:
