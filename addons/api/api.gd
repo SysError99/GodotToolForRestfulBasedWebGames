@@ -219,7 +219,7 @@ func get_auth_headers() -> PoolStringArray:
 func get_auth_json_headers() -> PoolStringArray:
 	return PoolStringArray(http_headers_get() + [
 		"access-token: " + access_token,
-		"Content-Type: applicaiton/json",
+		"Content-Type: application/json",
 	])
 
 
